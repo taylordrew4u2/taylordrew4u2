@@ -1,7 +1,4 @@
 
-**Here’s the exact corrected version** with your **current pinned repo names and URLs**:
-
-```markdown
 # Taylor Drew
 
 **iOS & Full-Stack Developer**  
