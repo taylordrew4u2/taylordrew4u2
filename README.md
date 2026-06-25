@@ -1,75 +1,75 @@
-
 # Taylor Drew
 
-**iOS & Full-Stack Developer**  
-SwiftUI • Next.js • TypeScript • NYC
+**iOS & Full-Stack Developer** — SwiftUI · Next.js · TypeScript · New York City
 
-I ship production applications that solve real, messy workflows. Two apps live in production (App Store + live web tools used in actual comedy and film productions). I care about clean architecture, maintainable code, and tools people actually use under pressure.
-
----
-
-## Skills
-
-**Mobile**  
-- SwiftUI (Advanced) • SwiftData • CloudKit • On-device AI / transcription
-
-**Web & Full-Stack**  
-- Next.js (Advanced) • React • TypeScript • Tailwind • PWA  
-- Prisma • PostgreSQL / Turso • REST APIs • Real-time & offline sync
-
-**Architecture & Practices**  
-- System design • Authentication & security • Client-side encryption • Testing • CI/CD • Clean code & documentation
-
-**Tools & Integrations**  
-- Stripe • Clerk • AI (Vision/OCR) • Git
+I ship production software for messy, real-world workflows. Two products are live and in active use: a native iOS app on the App Store and web tools running real comedy and film productions. I build with clean architecture and write code that holds up under pressure and stays maintainable long after launch.
 
 ---
 
-## Featured Projects
+## Tech
 
-### [Showrunner](https://github.com/taylordrew4u2/Showrunner-ICanRunAShow)
-Live show production tool powering real comedy performances.  
-Plan lineups, AI-import schedules from photos, run full-screen live mode with cue timers and walk-on music.  
-**Tech:** React 19 + TypeScript + Turso (client-side encryption)  
-**Status:** Actively used in productions • [Live Demo](https://icanrunashow.com)
+**Mobile**
+SwiftUI · SwiftData · CloudKit · on-device AI / transcription
 
-### [The Bit Binder](https://github.com/taylordrew4u2/The-Bit-Binder)
-Production iOS app for stand-up comedians. Capture, organize, record, transcribe, and refine material with on-device AI.  
-**Tech:** SwiftUI + SwiftData + CloudKit  
-**Status:** Live on the App Store • [View on App Store](https://apps.apple.com/us/app/the-bitbinder/id6756085897)
+**Web & Full-Stack**
+Next.js · React · TypeScript · Tailwind · PWA · Prisma · PostgreSQL / Turso · REST APIs · real-time & offline sync
 
-### [Role-Call](https://github.com/taylordrew4u2/Role-Call)
-End-to-end film production planner for crew roles, cast, scripts, and schedules.  
-**Tech:** Next.js + TypeScript + Clerk + Drizzle  
-**Status:** [Live Site](https://rolecall.space)
+**Architecture & Practices**
+System design · authentication & security · client-side encryption · testing · CI/CD · documentation
 
-### [the-trip-handler](https://github.com/taylordrew4u2/the-trip-handler)
-Full-stack group trip organizer. Private invites, approvals, itinerary, expenses, and Stripe payments.  
-**Tech:** Next.js + TypeScript + Prisma + Stripe
+**Integrations**
+Stripe · Clerk · AI Vision / OCR · Git
 
-### [Bill Spilt](https://github.com/taylordrew4u2/Bill-Spilt)
-Roommate bill splitting made easy.  
-**Tech:** Next.js + TypeScript
+---
 
-### [vlognudge](https://github.com/taylordrew4u2/vlognudge)
-ADHD-friendly iOS app that nudges users to film short daily vlog clips.  
-**Tech:** SwiftUI
+## Live Projects
+
+### The Bit Binder — iOS · App Store
+
+Native app for stand-up comedians to capture, organize, record, transcribe, and refine material with on-device AI.
+
+SwiftUI · SwiftData · CloudKit — [App Store](https://apps.apple.com/us/app/the-bitbinder/id6756085897) · [Code](https://github.com/taylordrew4u2/The-Bit-Binder)
+
+### Showrunner — Web · In production
+
+Live show-production tool used in real comedy performances. Build lineups, import schedules from a photo via AI, and run a full-screen live mode with cue timers and walk-on music.
+
+React 19 · TypeScript · Turso (client-side encryption) — [Live](https://icanrunashow.com) · [Code](https://github.com/taylordrew4u2/showrunner)
+
+### Role-Call — Web · Live
+
+End-to-end film production planner: crew roles, cast, scripts, and schedules in one place.
+
+Next.js · TypeScript · Clerk · Drizzle — [Live](https://rolecall.space) · [Code](https://github.com/taylordrew4u2/Role-Call)
+
+### The Trip Handler — Web
+
+Group-trip organizer with private invites, application approvals, shared itinerary and expenses, and Stripe payments.
+
+Next.js · TypeScript · Prisma · Stripe — [Code](https://github.com/taylordrew4u2/the-trip-handler)
+
+### Bill Spilt — Web
+
+Roommate bill-splitting, stripped to the essentials.
+
+Next.js · TypeScript — [Code](https://github.com/taylordrew4u2/BillBuddies)
+
+### VlogNudge — iOS
+
+ADHD-aware app that nudges users to film a short daily vlog clip.
+
+SwiftUI — [Code](https://github.com/taylordrew4u2/vlognudge)
 
 ---
 
 ## About
 
-I turn chaotic creative and event workflows into reliable software. My background producing and performing live comedy shows gives me strong intuition for building tools that actually work in high-pressure, real-world conditions.
-
-I prioritize clean architecture, good documentation, and code that’s pleasant to maintain long-term. I ship fast but build to last.
+I came to software from producing and performing live comedy in New York City, environments where things break in real time and there is no second take. That is the standard I build to: tools that work under pressure, for real people, on the night it matters. I ship fast and build to last.
 
 ---
 
-## Connect
+## Open to work
+
+Available for iOS and full-stack roles.
 
 **Email:** [taylordrew4u@gmail.com](mailto:taylordrew4u@gmail.com)
-```
-
-**Done.** These are the exact repo names/URLs that are currently pinned on your profile right now.
-
-Copy → paste → commit. That’s it.
