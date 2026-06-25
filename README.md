@@ -70,6 +70,6 @@ I came to software from producing and performing live comedy in New York City, e
 
 ## Open to work
 
-Available for iOS and full-stack roles.
+Open to any role where I can ship and learn — engineering, product, support, ops, early-stage everything. Full-time or contract, remote or New York City. I move fast, figure things out, and do the work. If you are building something real, reach out.
 
 **Email:** [taylordrew4u@gmail.com](mailto:taylordrew4u@gmail.com)
