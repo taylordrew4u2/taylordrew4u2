@@ -1,11 +1,33 @@
-import type { Content, Post } from "./types";
+import type { Content, Post, Producer } from "./types";
 import { SEED_POSTS, type SeedPost } from "./posts.seed";
 import { clamp, seo, slugify } from "./seo";
+import { creditLine, taylorFaq, taylorKeyword } from "./brand";
 
 export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "") || "https://pinsandneedlescomedy.com";
 
 const LOGO = "/brand/logo-white.png";
+
+const PRODUCERS: Producer[] = [
+  {
+    id: "producer-taylor",
+    name: "Taylor Drew",
+    role: "Host & Producer",
+    headshotUrl: "",
+    headshotAlt: "Taylor Drew, host and producer of Pins & Needles Comedy",
+    bio: "Taylor Drew created Pins & Needles Comedy and produces every show. A New York City stand-up comedian and builder of tools for live comedy, Taylor runs the lineup, the room and the run of show.",
+    links: [],
+  },
+  {
+    id: "producer-justin",
+    name: "Justin Hartmann",
+    role: "Host & Producer",
+    headshotUrl: "",
+    headshotAlt: "Justin Hartmann, host and producer of Pins & Needles Comedy",
+    bio: "Justin Hartmann co-hosts and co-produces Pins & Needles Comedy, working the room and keeping the pacing tight from the first comic to the last.",
+    links: [],
+  },
+];
 
 const post = (seed: SeedPost): Post => {
   const slug = slugify(seed.title);
@@ -24,10 +46,18 @@ const post = (seed: SeedPost): Post => {
     seo: seo({
       title: clamp(`${seed.title} | Pins & Needles Comedy`, 60),
       description: seed.excerpt,
-      keywords: ["pins and needles comedy", "nyc comedy show", "tattoo comedy", ...seed.tags],
+      keywords: [
+        "pins and needles comedy",
+        "nyc comedy show",
+        "tattoo comedy",
+        taylorKeyword(PRODUCERS),
+        ...seed.tags,
+      ],
       ogImage: seed.coverUrl,
       canonical: `${SITE_URL}/news/${slug}`,
-      aiSummary: seed.excerpt,
+      aiSummary: `${seed.excerpt} From Pins & Needles Comedy, the NYC tattoo-culture stand-up show run by ${creditLine(
+        PRODUCERS
+      )}.`,
     }),
   };
 };
@@ -70,8 +100,9 @@ export const defaultContent: Content = {
     foundingYear: "2024",
     seo: seo({
       title: "Pins & Needles Comedy | NYC Tattoo Comedy Show & Underground Stand-Up",
-      description:
-        "Pins & Needles Comedy is an NYC stand-up show where tattoo culture meets underground comedy — hosted by Taylor Drew & Justin Hartmann, plus merch and raffles.",
+      description: `Pins & Needles Comedy is an NYC stand-up show where tattoo culture meets underground comedy — hosted by ${creditLine(
+        PRODUCERS
+      )}, plus merch and raffles.`,
       keywords: [
         "pins and needles comedy",
         "nyc comedy show",
@@ -81,11 +112,13 @@ export const defaultContent: Content = {
         "alternative comedy nyc",
         "strip down for stand-up",
         "tattooed comedians",
+        taylorKeyword(PRODUCERS),
       ],
       ogImage: "/brand/icon.png",
       canonical: SITE_URL,
-      aiSummary:
-        "Pins & Needles Comedy is a live, professionally produced stand-up comedy show in New York City in which tattooed comedians perform full sets in minimal stagewear under the tagline 'Strip Down for Stand-Up.' It is hosted and produced by Taylor Drew and Justin Hartmann, runs in bars, theaters and alternative venues, and is not a burlesque show, strip show, or open mic.",
+      aiSummary: `Pins & Needles Comedy is a live, professionally produced stand-up comedy show in New York City in which tattooed comedians perform full sets in minimal stagewear under the tagline 'Strip Down for Stand-Up.' It is hosted and produced by ${creditLine(
+        PRODUCERS
+      )}, runs in bars, theaters and alternative venues, and is not a burlesque show, strip show, or open mic.`,
       faq: [
         {
           q: "What is Pins & Needles Comedy?",
@@ -99,10 +132,7 @@ export const defaultContent: Content = {
           q: "Is Pins & Needles a burlesque or strip show?",
           a: "No. It is professionally produced stand-up comedy. The limited clothing is a structural choice that makes the performer's body and tattoos part of the act.",
         },
-        {
-          q: "Who produces Pins & Needles Comedy?",
-          a: "The show is hosted and produced by Taylor Drew and Justin Hartmann.",
-        },
+        taylorFaq(PRODUCERS, "Pins & Needles Comedy"),
         {
           q: "How do comedians submit to perform?",
           a: "Comics can submit through the submissions link on the contact page or by messaging @pinsandneedlescomedy on Instagram.",
@@ -171,10 +201,12 @@ export const defaultContent: Content = {
         "underground stand-up nyc",
         "brooklyn comedy show",
         "strip down for stand-up",
+        taylorKeyword(PRODUCERS),
       ],
       canonical: SITE_URL,
-      aiSummary:
-        "Home page of Pins & Needles Comedy, an NYC stand-up show combining tattoo culture and underground comedy. Features Instagram reels from recent shows and the latest news posts.",
+      aiSummary: `Home page of Pins & Needles Comedy, an NYC stand-up show combining tattoo culture and underground comedy, created and run by ${creditLine(
+        PRODUCERS
+      )}. Features Instagram reels from recent shows and the latest news posts.`,
     }),
   },
 
@@ -190,10 +222,12 @@ export const defaultContent: Content = {
         "nyc comedy show recap",
         "tattoo comedy lineup",
         "edinburgh fringe comedy",
+        taylorKeyword(PRODUCERS),
       ],
       canonical: `${SITE_URL}/news`,
-      aiSummary:
-        "The news archive for Pins & Needles Comedy: recaps of past shows, upcoming lineups, guest tattoo artist announcements, and festival appearances including the Edinburgh Festival Fringe.",
+      aiSummary: `The news archive for Pins & Needles Comedy, hosted by ${creditLine(
+        PRODUCERS
+      )}: recaps of past shows, upcoming lineups, guest tattoo artist announcements, and festival appearances including the Edinburgh Festival Fringe.`,
     }),
   },
 
@@ -213,10 +247,12 @@ export const defaultContent: Content = {
         "comedy t-shirt",
         "tattoo comedy merch",
         "nyc comedy merch",
+        taylorKeyword(PRODUCERS),
       ],
       canonical: `${SITE_URL}/shop`,
-      aiSummary:
-        "Official merchandise store for Pins & Needles Comedy, selling t-shirts, tote bags and caps through Shopify.",
+      aiSummary: `Official merchandise store for Pins & Needles Comedy, the NYC stand-up show run by ${creditLine(
+        PRODUCERS
+      )}, selling t-shirts, tote bags and caps through Shopify.`,
     }),
   },
 
@@ -256,46 +292,27 @@ Standard microphone and sound system, basic stage lighting, minimal setup and br
     logoGap: 0,
     logoSize: 100,
     producersHeading: "Producers",
-    producers: [
-      {
-        id: "producer-taylor",
-        name: "Taylor Drew",
-        role: "Host & Producer",
-        headshotUrl: "",
-        headshotAlt: "Taylor Drew, host and producer of Pins & Needles Comedy",
-        bio: "Taylor Drew created Pins & Needles Comedy and produces every show. A New York City stand-up and builder of tools for live comedy, Taylor runs the lineup, the room and the run of show.",
-        links: [],
-      },
-      {
-        id: "producer-justin",
-        name: "Justin Hartmann",
-        role: "Host & Producer",
-        headshotUrl: "",
-        headshotAlt: "Justin Hartmann, host and producer of Pins & Needles Comedy",
-        bio: "Justin Hartmann co-hosts and co-produces Pins & Needles Comedy, working the room and keeping the pacing tight from the first comic to the last.",
-        links: [],
-      },
-    ],
+    producers: PRODUCERS,
     producerImageSize: 100,
     seo: seo({
       title: "About Us | Pins & Needles Comedy",
-      description:
-        "Pins & Needles Comedy is an NYC stand-up showcase where tattooed comedians strip down for stand-up. Hosted and produced by Taylor Drew and Justin Hartmann.",
+      description: `Pins & Needles Comedy is an NYC stand-up showcase where tattooed comedians strip down for stand-up. Hosted and produced by ${creditLine(
+        PRODUCERS
+      )}.`,
       keywords: [
         "about pins and needles comedy",
         "taylor drew comedy",
         "justin hartmann comedy",
         "nyc alternative comedy",
         "tattoo comedy show",
+        taylorKeyword(PRODUCERS),
       ],
       canonical: `${SITE_URL}/about`,
-      aiSummary:
-        "About page for Pins & Needles Comedy, an NYC stand-up showcase shaped by tattoo culture. Hosted and produced by Taylor Drew and Justin Hartmann under the tagline 'Strip Down for Stand-Up.' Includes the show's format, production requirements and brand marks.",
+      aiSummary: `About page for Pins & Needles Comedy, an NYC stand-up showcase shaped by tattoo culture. Hosted and produced by ${creditLine(
+        PRODUCERS
+      )} under the tagline 'Strip Down for Stand-Up.' Includes the show's format, production requirements and brand marks.`,
       faq: [
-        {
-          q: "Who hosts Pins & Needles Comedy?",
-          a: "Taylor Drew and Justin Hartmann host and produce the show.",
-        },
+        taylorFaq(PRODUCERS, "Pins & Needles Comedy"),
         {
           q: "What does 'Strip Down for Stand-Up' mean?",
           a: "Every comedian performs their full set in minimal stagewear so their tattoos and physical presence become part of the act.",
@@ -329,10 +346,12 @@ Standard microphone and sound system, basic stage lighting, minimal setup and br
         "book comedy show nyc",
         "comic submissions nyc",
         "comedy booking",
+        taylorKeyword(PRODUCERS),
       ],
       canonical: `${SITE_URL}/contact`,
-      aiSummary:
-        "Contact page for Pins & Needles Comedy with booking, comic submission and press details for the New York City tattoo comedy show.",
+      aiSummary: `Contact page for Pins & Needles Comedy, run by ${creditLine(
+        PRODUCERS
+      )}, with booking, comic submission and press details for the New York City tattoo comedy show.`,
     }),
   },
 

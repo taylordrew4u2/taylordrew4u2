@@ -1,5 +1,6 @@
 import type { Content, Post, Seo } from "@/lib/types";
 import { clamp, stripMarkdown, suggestKeywords } from "@/lib/seo";
+import { creditLine, taylorFaq, taylorKeyword } from "@/lib/brand";
 
 export type Suggestion = {
   title: string;
@@ -59,10 +60,12 @@ export function suggestFor(
       return make(
         `${post.title} | ${site.shortName || brand}`,
         post.excerpt || text,
-        `${post.title}. ${post.excerpt || clamp(text, 320)} Published ${post.date} by ${brand}, an NYC stand-up comedy show where tattooed comedians perform in minimal stagewear.`,
+        `${post.title}. ${post.excerpt || clamp(text, 320)} Published ${post.date} by ${brand}, an NYC stand-up comedy show run by ${creditLine(
+          content.about.producers
+        )}.`,
         `${post.title} ${post.excerpt} ${text}`,
         `/news/${post.slug}`,
-        post.tags,
+        [...post.tags, taylorKeyword(content.about.producers)],
         post.coverUrl || fallbackImage,
         [
           {
@@ -76,45 +79,51 @@ export function suggestFor(
       return make(
         `${brand} | NYC Tattoo Comedy Show & Underground Stand-Up`,
         `${site.tagline}. Watch reels from recent shows, read the latest news, and grab merch from ${brand}.`,
-        `Home page of ${brand}, a New York City stand-up comedy show where tattooed comedians perform full sets in minimal stagewear. Shows Instagram reels from recent nights and the latest news posts.`,
+        `Home page of ${brand}, a New York City stand-up comedy show created and run by ${creditLine(
+          content.about.producers
+        )}. Shows Instagram reels from recent nights and the latest news posts.`,
         `${brand} ${site.tagline} ${content.about.story}`,
         "/",
-        ["nyc comedy tonight", "brooklyn comedy show", "alternative comedy nyc"]
+        ["nyc comedy tonight", "brooklyn comedy show", "alternative comedy nyc", taylorKeyword(content.about.producers)]
       );
     case "news":
       return make(
         `News | ${brand}`,
         `Show recaps, lineup announcements and guest tattoo artists from ${brand}, the NYC tattoo comedy show.`,
-        `The news archive for ${brand}: recaps of past shows, upcoming lineups, guest tattoo artist announcements and festival appearances.`,
+        `The news archive for ${brand}, hosted by ${creditLine(
+          content.about.producers
+        )}: recaps of past shows, upcoming lineups, guest tattoo artist announcements and festival appearances.`,
         content.posts.map((entry) => `${entry.title} ${entry.excerpt}`).join(" "),
         "/news",
-        ["comedy show recap", "comedy lineup nyc"]
+        ["comedy show recap", "comedy lineup nyc", taylorKeyword(content.about.producers)]
       );
     case "shop":
       return make(
         `Shop | ${brand} Merch`,
         `Official ${brand} merch — t-shirts, tote bags and caps from the NYC tattoo comedy show.`,
-        `Official merchandise store for ${brand}, selling t-shirts, tote bags and caps.`,
+        `Official merchandise store for ${brand}, the NYC stand-up show run by ${creditLine(
+          content.about.producers
+        )}, selling t-shirts, tote bags and caps.`,
         `${content.shop.heading} ${content.shop.intro} merch t-shirt tote cap`,
         "/shop",
-        ["comedy merch", "tattoo comedy t-shirt"]
+        ["comedy merch", "tattoo comedy t-shirt", taylorKeyword(content.about.producers)]
       );
     case "about":
       return make(
         `About Us | ${brand}`,
-        `${brand} is an NYC stand-up showcase where tattooed comedians strip down for stand-up. Hosted by ${content.about.producers
-          .map((producer) => producer.name)
-          .join(" and ")}.`,
-        `About page for ${brand}. ${clamp(stripMarkdown(content.about.story), 380)}`,
+        `${brand} is an NYC stand-up showcase where tattooed comedians strip down for stand-up. Hosted by ${creditLine(
+          content.about.producers
+        )}.`,
+        `About page for ${brand}, hosted by ${creditLine(content.about.producers)}. ${clamp(
+          stripMarkdown(content.about.story),
+          320
+        )}`,
         `${content.about.story} ${content.about.producers.map((p) => `${p.name} ${p.bio}`).join(" ")}`,
         "/about",
-        content.about.producers.map((producer) => producer.name.toLowerCase()),
+        [...content.about.producers.map((producer) => producer.name.toLowerCase()), taylorKeyword(content.about.producers)],
         fallbackImage,
         [
-          {
-            q: `Who hosts ${brand}?`,
-            a: `${content.about.producers.map((producer) => producer.name).join(" and ")} host and produce the show.`,
-          },
+          taylorFaq(content.about.producers, brand),
           {
             q: `Is ${brand} a burlesque or strip show?`,
             a: "No. It is professionally produced stand-up comedy — the limited clothing is a structural choice that makes the performer's tattoos and physical presence part of the act.",
@@ -125,7 +134,9 @@ export function suggestFor(
       return make(
         `Contact | ${brand}`,
         `Book ${brand} for your venue, submit as a comic, or reach the NYC tattoo comedy show for press.`,
-        `Contact page for ${brand} with booking, comic submission and press details.`,
+        `Contact page for ${brand}, run by ${creditLine(
+          content.about.producers
+        )}, with booking, comic submission and press details.`,
         `${content.contact.heading} ${content.contact.intro} booking submissions press venue`,
         "/contact",
         ["book comedy show nyc", "comic submissions"]
@@ -134,13 +145,17 @@ export function suggestFor(
     default:
       return make(
         `${brand} | NYC Tattoo Comedy Show & Underground Stand-Up`,
-        `${brand} is an NYC stand-up show where tattoo culture meets underground comedy — hosted by ${content.about.producers
-          .map((producer) => producer.name)
-          .join(" & ")}.`,
-        `${brand} is a live, professionally produced stand-up comedy show in New York City in which tattooed comedians perform full sets in minimal stagewear under the tagline "Strip Down for Stand-Up."`,
+        `${brand} is an NYC stand-up show where tattoo culture meets underground comedy — hosted by ${creditLine(
+          content.about.producers
+        )}.`,
+        `${brand} is a live, professionally produced stand-up comedy show in New York City in which tattooed comedians perform full sets in minimal stagewear under the tagline "Strip Down for Stand-Up." It is hosted by ${creditLine(
+          content.about.producers
+        )}.`,
         `${brand} ${site.tagline} ${content.about.story}`,
         "/",
-        ["strip down for stand-up", "tattooed comedians"]
+        ["strip down for stand-up", "tattooed comedians", taylorKeyword(content.about.producers)],
+        fallbackImage,
+        [taylorFaq(content.about.producers, brand)]
       );
   }
 
