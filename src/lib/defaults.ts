@@ -1,4 +1,5 @@
 import type { Content, Post } from "./types";
+import { SEED_POSTS, type SeedPost } from "./posts.seed";
 import { clamp, seo, slugify } from "./seo";
 
 export const SITE_URL =
@@ -6,32 +7,30 @@ export const SITE_URL =
 
 const LOGO = "/brand/logo-white.png";
 
-const post = (
-  date: string,
-  title: string,
-  excerpt: string,
-  body: string,
-  tags: string[]
-): Post => ({
-  id: slugify(title),
-  slug: slugify(title),
-  title,
-  excerpt,
-  body,
-  coverUrl: "",
-  coverAlt: `${title} — Pins & Needles Comedy`,
-  date,
-  tags,
-  published: true,
-  featured: false,
-  seo: seo({
-    title: clamp(`${title} | Pins & Needles Comedy`, 60),
-    description: excerpt,
-    keywords: ["pins and needles comedy", "nyc comedy show", "tattoo comedy", ...tags],
-    canonical: `${SITE_URL}/news/${slugify(title)}`,
-    aiSummary: excerpt,
-  }),
-});
+const post = (seed: SeedPost): Post => {
+  const slug = slugify(seed.title);
+  return {
+    id: slug,
+    slug,
+    title: seed.title,
+    excerpt: seed.excerpt,
+    body: seed.body,
+    coverUrl: seed.coverUrl,
+    coverAlt: seed.coverAlt,
+    date: seed.date,
+    tags: seed.tags,
+    published: true,
+    featured: false,
+    seo: seo({
+      title: clamp(`${seed.title} | Pins & Needles Comedy`, 60),
+      description: seed.excerpt,
+      keywords: ["pins and needles comedy", "nyc comedy show", "tattoo comedy", ...seed.tags],
+      ogImage: seed.coverUrl,
+      canonical: `${SITE_URL}/news/${slug}`,
+      aiSummary: seed.excerpt,
+    }),
+  };
+};
 
 export const defaultContent: Content = {
   version: 1,
@@ -356,138 +355,7 @@ Standard microphone and sound system, basic stage lighting, minimal setup and br
     autoScrollSpeed: 40,
   },
 
-  posts: [
-    post(
-      "2026-08-24",
-      "Pins & Needles Is Back From Edinburgh Fringe, and the Room Has Not Stopped Talking",
-      "The show returned from the Edinburgh Festival Fringe with a tighter hour, new comics on the radar and a New York room that has not stopped talking about it.",
-      `Pins & Needles Comedy is back in New York after a run at the Edinburgh Festival Fringe, and the show came home sharper than it left.
-
-Playing to a festival crowd changes what a set has to do. The Fringe rewards clarity, and a month of it stripped the show down to its strongest structure: tight hosting, curated lineups, and comics who commit fully to the format.
-
-## What's next
-
-New York dates are being locked now. Watch the Instagram for the announcement, and check back here for the lineup.`,
-      ["edinburgh fringe", "festival", "recap"]
-    ),
-    post(
-      "2026-08-06",
-      "Pins & Needles Comedy Brings Tattooed Stand-Up to the Edinburgh Festival Fringe 2026",
-      "The NYC tattoo comedy show crossed the Atlantic for the Edinburgh Festival Fringe 2026, bringing 'Strip Down for Stand-Up' to a new audience.",
-      `Pins & Needles Comedy is taking the show to the Edinburgh Festival Fringe.
-
-The format travels intact: a curated lineup of experienced stand-ups, each performing a full set in minimal stagewear, with tattoos as part of the visual storytelling.
-
-## Why Edinburgh
-
-The Fringe is the largest arts festival in the world, and it is built for exactly the kind of show that does not fit the traditional club circuit. Pins & Needles is art-forward, visually distinct and tightly produced — a natural fit.`,
-      ["edinburgh fringe", "festival", "announcement"]
-    ),
-    post(
-      "2026-08-01",
-      "July 30th Recap: Ink, Laughs, and Brooklyn's Wildest Night at Pins & Needles Comedy",
-      "A full house at Secret Pour in Brooklyn for flash tattoos, an artist pop-up and a stacked lineup of tattooed comics.",
-      `Secret Pour was packed on July 30th for one of the biggest Pins & Needles nights yet.
-
-Mr. Stitch dropped a brand-new flash sheet and tattooed through the show. The lineup ran tight, the room stayed loud, and the pop-up sold through most of the rack.
-
-## Thanks
-
-To every comic, every artist, and everyone who came out — this is why the show works.`,
-      ["brooklyn", "secret pour", "recap", "flash tattoos"]
-    ),
-    post(
-      "2026-07-30",
-      "Tonight in Brooklyn: Pins & Needles Takes Over Secret Pour — and Mr. Stitch Is Dropping Brand-New Flash",
-      "Doors tonight at Secret Pour in Brooklyn with a stacked lineup and a fresh flash sheet from Mr. Stitch, tattooing live during the show.",
-      `Tonight is the night. Pins & Needles Comedy takes over Secret Pour in Brooklyn.
-
-Mr. Stitch is dropping a brand-new flash sheet and tattooing live through the show. Get there early if you want a slot.
-
-## Details
-
-- Venue: Secret Pour, Brooklyn
-- Live tattooing during the show
-- Curated lineup of tattooed stand-ups`,
-      ["brooklyn", "secret pour", "mr stitch", "flash tattoos"]
-    ),
-    post(
-      "2026-06-28",
-      "Mr. Stitch Makes His Pins & Needles Debut July 30 at Secret Pour",
-      "Tattoo artist Mr. Stitch joins Pins & Needles Comedy for the July 30 show at Secret Pour in Brooklyn.",
-      `Mr. Stitch is making his Pins & Needles debut on July 30 at Secret Pour.
-
-He will be tattooing live during the show off a flash sheet built for the night. Walk-ups only, first come first served.`,
-      ["mr stitch", "tattoo artist", "brooklyn"]
-    ),
-    post(
-      "2026-06-27",
-      "Submissions Are Now Open for Pins & Needles at Edinburgh Fringe",
-      "Comics can now submit to perform with Pins & Needles Comedy at the Edinburgh Festival Fringe.",
-      `Submissions are open for the Edinburgh Fringe run.
-
-We are looking for experienced stand-ups with tight, road-ready sets who are comfortable with the show's format. Everything is communicated clearly in advance — there are no surprises on stage.
-
-## How to submit
-
-Message @pinsandneedlescomedy on Instagram with a tape and a short note about your set.`,
-      ["submissions", "edinburgh fringe", "comics"]
-    ),
-    post(
-      "2026-06-26",
-      "Pins & Needles Comedy Returns July 30 with Flash Tattoos, Artist Pop-Up, and Two POSER Comics",
-      "The July 30 show brings flash tattoos, an artist pop-up shop and two comics from POSER to the Pins & Needles stage.",
-      `The next Pins & Needles is July 30, and it is stacked.
-
-Flash tattoos on site, an artist pop-up running all night, and two comics from POSER joining the lineup.`,
-      ["lineup", "flash tattoos", "pop-up", "poser"]
-    ),
-    post(
-      "2026-06-20",
-      "Pins & Needles Comedy Audition Open Mic — June 25th at 9 PM",
-      "An audition open mic for comics who want a spot on a future Pins & Needles lineup. June 25th at 9 PM.",
-      `We are running an audition open mic on June 25th at 9 PM.
-
-This is the fastest way onto a Pins & Needles lineup. Bring a tight five. The format is explained up front and nobody goes on stage without agreeing to it first.`,
-      ["open mic", "auditions", "comics"]
-    ),
-    post(
-      "2026-06-06",
-      "May 28th Pins & Needles Comedy at Secret Pour | New York City Tattoo Comedy Show Recap",
-      "A recap of the May 28th show at Secret Pour, including the secret short film screening that followed the stand-up.",
-      `May 28th at Secret Pour was one of the sharpest lineups the show has run.
-
-The stand-up ran tight, and the night closed with a secret screening of two short films for anyone who stuck around.`,
-      ["recap", "secret pour", "short films"]
-    ),
-    post(
-      "2026-05-28",
-      "Pins & Needles Comedy Adds a Secret Screening of Two Short Films After the Stand-Up Show",
-      "Two short films screened after the May 28th stand-up show at Secret Pour — announced only to the room.",
-      `After the stand-up on May 28th, we screened two short films for the room.
-
-No announcement, no pre-sale. If you were there, you saw them.`,
-      ["short films", "screening", "secret pour"]
-    ),
-    post(
-      "2026-05-28",
-      "Rob White Dropped the Flash Sheet for Pins & Needles Comedy — Tattoos Available Tomorrow Night",
-      "Tattoo artist Rob White released his flash sheet ahead of the Pins & Needles show, with tattoos available the following night.",
-      `Rob White's flash sheet for Pins & Needles is out.
-
-Tattoos are available tomorrow night at the show, walk-ups only.`,
-      ["rob white", "flash sheet", "tattoo artist"]
-    ),
-    post(
-      "2026-05-21",
-      "Rob White Brings Comedy, Custom Portraits, and Fresh Ink",
-      "Tattoo artist Rob White joins Pins & Needles Comedy with custom portraits and live tattooing.",
-      `Rob White is joining Pins & Needles with custom portraits and fresh ink.
-
-He will be drawing and tattooing through the show alongside the lineup.`,
-      ["rob white", "tattoo artist", "lineup"]
-    ),
-  ],
+  posts: SEED_POSTS.map(post),
 
   reels: [],
 };
