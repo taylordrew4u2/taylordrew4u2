@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { site, news } = await getContent();
-  return toMetadata(site, news.seo, "/news");
+  return await toMetadata(site, news.seo, "/news");
 }
 
 export default async function NewsIndexPage() {
