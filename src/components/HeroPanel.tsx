@@ -78,7 +78,7 @@ export default function HeroPanel({
 
       <nav
         aria-label="Primary"
-        className="relative flex w-full flex-wrap items-center justify-center gap-x-2 gap-y-2 pb-6 pt-2 uppercase"
+        className="relative flex w-full flex-wrap items-center justify-center gap-x-2 gap-y-2 px-4 pb-6 pt-2 uppercase"
         style={{
           fontSize: hero.navSize,
           letterSpacing: `${hero.navLetterSpacing / 100}em`,

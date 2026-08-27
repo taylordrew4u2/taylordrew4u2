@@ -43,7 +43,7 @@ export default function PageHeader({
 
       <nav
         aria-label="Primary"
-        className="flex flex-wrap items-center justify-center gap-x-2 gap-y-2 uppercase"
+        className="flex flex-wrap items-center justify-center gap-x-2 gap-y-2 px-4 uppercase"
         style={{ fontSize: hero.navSize, letterSpacing: `${hero.navLetterSpacing / 100}em` }}
       >
         {nav.map((item, index) => (
