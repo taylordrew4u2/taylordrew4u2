@@ -10,6 +10,9 @@ storage, Google Fonts for type. Nothing here needs a paid service.
 - Site: `/`
 - Admin: `/admin` — password `weed`
 
+**Setting this up for the first time? Work through [`TODO.md`](TODO.md)** —
+it is the same information as a checklist, in the order it has to happen.
+
 ---
 
 # Setting it up on Vercel
