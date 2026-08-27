@@ -43,7 +43,13 @@ function prefillSeo(content: Content): Content {
   return next;
 }
 
-export default function AdminApp({ initial }: { initial: Content }) {
+export default function AdminApp({
+  initial,
+  warning,
+}: {
+  initial: Content;
+  warning: string | null;
+}) {
   const [content, setContent] = useState<Content>(() => prefillSeo(initial));
   const [tab, setTab] = useState<TabId>("home");
   const [save, setSave] = useState<SaveState>("idle");
@@ -168,6 +174,13 @@ export default function AdminApp({ initial }: { initial: Content }) {
       </header>
 
       <main className="mx-auto max-w-4xl px-4 py-6">
+        {warning ? (
+          <p className="mb-4 rounded-md border border-amber-700/60 bg-amber-950/40 px-4 py-3 text-[12px] leading-relaxed text-amber-200">
+            <span className="font-semibold">Saving is not set up yet. </span>
+            {warning}
+          </p>
+        ) : null}
+
         <p className="mb-6 rounded-md border border-neutral-800 bg-neutral-900 px-4 py-3 text-[12px] leading-relaxed text-neutral-400">
           Everything on this page saves itself a moment after you stop typing — there is no save
           button. SEO and AI-SEO fields come prefilled with suggestions; edit any of them.

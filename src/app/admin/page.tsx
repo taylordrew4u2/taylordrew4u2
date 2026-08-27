@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { isAuthed } from "@/lib/auth";
-import { getContent } from "@/lib/store";
+import { getContent, storageWarning } from "@/lib/store";
 import AdminApp from "./AdminApp";
 import LoginForm from "./LoginForm";
 
@@ -13,5 +13,5 @@ export const metadata: Metadata = {
 
 export default async function AdminPage() {
   if (!(await isAuthed())) return <LoginForm />;
-  return <AdminApp initial={await getContent()} />;
+  return <AdminApp initial={await getContent()} warning={storageWarning()} />;
 }

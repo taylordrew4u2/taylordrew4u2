@@ -131,3 +131,13 @@ export async function saveUpload(
   await fs.writeFile(path.join(dir, key), bytes);
   return `/uploads/${key}`;
 }
+
+/**
+ * On Vercel the filesystem is read-only, so the "fs" driver cannot save.
+ * Returns a message to surface in the admin when that is the situation.
+ */
+export function storageWarning(): string | null {
+  if (driver !== "fs") return null;
+  if (!process.env.VERCEL) return null;
+  return "This deployment has no Blob store, so nothing you change here will save. In the Vercel dashboard open Storage → Create → Blob and connect it to this project, then redeploy.";
+}
