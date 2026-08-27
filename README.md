@@ -65,7 +65,7 @@ happened. Go to **Deployments**, open the most recent one, and hit
 Now open `/admin` on the deployed URL, change something, and confirm the header
 says *Saved*.
 
-### 5. Point the domain at Vercel
+### 5. Point the domain at Vercel — whenever you're ready
 
 Project → **Settings → Domains** → add `pinsandneedlescomedy.com` and follow the
 DNS records it gives you.

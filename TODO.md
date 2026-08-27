@@ -1,273 +1,286 @@
 # Launch checklist
 
-Everything left to do, in the order it has to happen. Tick as you go.
+What's left, in the order it has to happen. Tick as you go.
 
-Anything marked **⚠️** breaks something if you skip it or do it out of order.
+**⚠️** marks the steps that break something if you skip them or do them out of
+order. Everything else is safe to do whenever.
+
+The domain move is **Part 4** — deliberately last. Parts 1–3 all happen on the
+Vercel URL while `pinsandneedlescomedy.com` keeps serving Shopify, untouched.
 
 ---
 
-## Part 1 — Get the code live (15 minutes)
+## Part 1 — Make it save (15 minutes)
 
 ### ☐ 1. Merge the open pull request
 
-Open **https://github.com/taylordrew4u2/taylordrew4u2/pull/2**
+**https://github.com/taylordrew4u2/taylordrew4u2/pull/2**
 
-1. Click **Ready for review** (it's currently a draft).
-2. Click **Squash and merge** → **Confirm squash and merge**.
+Click **Ready for review**, then **Squash and merge** → **Confirm**.
 
-This is what puts the storage bug fix, the robots fix and the "no Blob store"
-warning banner into production. Vercel starts a production deploy the moment it
-merges.
+Vercel starts a production deploy the moment it lands.
 
 ---
 
-### ☐ 2. Add the three environment variables
+### ☐ 2. Add three environment variables
 
-Go to **https://vercel.com/taylordrew4u2s-projects/taylordrew4u2** →
-**Settings** → **Environment Variables**.
-
-Add each one with **all three** boxes ticked (Production, Preview, Development):
+**https://vercel.com/taylordrew4u2s-projects/taylordrew4u2** → **Settings** →
+**Environment Variables**. Tick all three boxes (Production, Preview,
+Development) on each:
 
 | Key | Value |
 | --- | --- |
 | `NEXT_PUBLIC_SITE_URL` | `https://pinsandneedlescomedy.com` |
 | `ADMIN_SECRET` | a long random string — see below |
-| `ADMIN_PASSWORD` | `weed`, or whatever you'd rather use |
+| `ADMIN_PASSWORD` | `weed`, or something better |
 
-**For `ADMIN_SECRET`:** run `openssl rand -hex 32` in a terminal and paste the
-result. No terminal? Open any browser's dev console (F12) and run:
+**Set `NEXT_PUBLIC_SITE_URL` to the real domain now, even though it still
+points at Shopify.** That's intentional — see step 6.
+
+**For `ADMIN_SECRET`:** run `openssl rand -hex 32` in a terminal. No terminal?
+Open any browser's dev console (F12) and run:
 
 ```js
 crypto.randomUUID() + crypto.randomUUID()
 ```
 
-Paste that. It just needs to be long and random — you never type it again.
-
-> Skipping `ADMIN_SECRET` doesn't break anything today, but it logs you out of
-> `/admin` every time the site redeploys.
+Paste the result. It only needs to be long and random — you never type it
+again. Skipping it logs you out of `/admin` on every deploy.
 
 ---
 
-### ⚠️ ☐ 3. Add the Blob store — the site cannot save without this
+### ⚠️ ☐ 3. Add the Blob store — nothing saves without this
 
-Same project → the **Storage** tab (top of the page, next to Deployments) →
-**Create Database** → choose **Blob** → **Continue** → name it anything →
-**Create** → **Connect to Project**.
+Same project → the **Storage** tab at the top → **Create Database** → **Blob**
+→ **Continue** → name it anything → **Create** → **Connect to Project**.
 
-**Why this matters:** Vercel's servers have a read-only disk. Without a Blob
-store, `/admin` looks completely normal — it loads, you log in, you type — and
-then nothing you write is ever saved. This is where your text and every image
-you upload actually lives.
+Vercel's servers have a read-only disk. Without a Blob store, `/admin` looks
+completely normal — loads, logs you in, lets you type — and then throws away
+everything you write. This is where your text and every uploaded image actually
+lives.
 
-It's free and this site will not come close to the free limit.
+Free, and this site won't come near the limit.
 
 ---
 
 ### ☐ 4. Redeploy
 
-**Deployments** tab → the top entry → the **⋯** menu on the right →
-**Redeploy** → **Redeploy**.
+**Deployments** → top entry → **⋯** → **Redeploy** → **Redeploy**.
 
-Environment variables and storage do **not** apply to a build that already
-finished. If you skip this, steps 2 and 3 have no effect yet.
+Environment variables and storage don't apply to a build that already finished.
+Skip this and steps 2 and 3 have had no effect yet.
 
 Wait for the green **Ready**.
 
 ---
 
-### ☐ 5. Confirm saving actually works
+### ⚠️ ☐ 5. Confirm saving actually works — do not skip
 
-1. Open your Vercel URL and add `/admin` to the end.
-2. Log in with your password.
-3. **Look for an orange banner** at the top saying saving isn't set up.
-   - **Banner is there** → the Blob store isn't connected. Redo step 3, then step 4.
-   - **No banner** → you're good.
-4. Change any text field. Watch the top of the page: it should flash
-   **Saving…** then **Saved**.
-5. Refresh the page. Your change should still be there.
+1. Open the Vercel URL with `/admin` on the end.
+2. Log in.
+3. **Is there an orange banner** saying saving isn't set up?
+   - **Yes** → the Blob store isn't connected. Redo step 3, then step 4.
+   - **No** → good.
+4. Change any text field. The header should flash **Saving…** then **Saved**.
+5. Refresh. Your change should still be there.
 
-**Do not go further until step 5 passes.** Everything after this is you typing
-content in, and you don't want to discover it isn't saving after an hour of work.
-
----
-
-## Part 2 — Before you point the domain
-
-### ☐ 6. Check who can see the site
-
-**Settings** → **Deployment Protection**.
-
-- Protection on **preview** deployments is fine and normal — leave it.
-- If anything is set to protect **Production** or **All Deployments**, turn that
-  off. Otherwise visitors to pinsandneedlescomedy.com would hit a Vercel login
-  screen instead of your site.
+Everything after this is you typing content in. Find out now, not after an hour
+of work.
 
 ---
 
-### ⚠️ ☐ 7. Get your Shopify embed in BEFORE the DNS moves
+## Part 2 — One thing to know before you start
 
-`pinsandneedlescomedy.com` currently points at Shopify. The second you move the
-DNS in step 8, that address stops serving your store — so bring the store over
-first.
+### ☐ 6. Why Google can't see the Vercel URL (nothing to do — just read this)
 
-1. In **Shopify admin** → **Sales channels** → **Buy Button**.
-   (Not there? **Settings** → **Apps and sales channels** → **Shopify App Store**
-   → search "Buy Button" → add it.)
-2. **Create a Buy Button** → **Collection** → pick your products collection.
-3. Choose a layout, then **Next** → **Copy code**.
-4. In your site: `/admin` → **Shop** tab → paste it into **Embed code**.
-5. Open `/shop` on the Vercel URL and confirm your products appear.
+While the site is on its `.vercel.app` address it serves `noindex` and a
+`robots.txt` that blocks everything. That's on purpose. It's the same pages
+that will live at pinsandneedlescomedy.com, and if Google indexed this copy it
+would compete with the real domain later.
 
-**Also write down your `something.myshopify.com` URL now.** After the DNS moves,
-that's the only way back into the Buy Button generator.
+The site decides this by comparing the address in the browser to
+`NEXT_PUBLIC_SITE_URL`. **The day DNS moves, it becomes fully crawlable by
+itself.** No setting to remember, nothing to switch.
 
----
-
-### ☐ 8. Point the domain at Vercel
-
-**Settings** → **Domains** → **Add** → type `pinsandneedlescomedy.com` → **Add**.
-
-Vercel shows you the DNS records to create. Go to wherever you bought the domain
-(or wherever its DNS lives today — possibly Shopify) and:
-
-1. Change the **A record** for `@` to the IP Vercel gives you.
-2. Change the **CNAME** for `www` to the value Vercel gives you.
-3. Delete or replace the old Shopify records for those two names.
-
-DNS takes anywhere from 10 minutes to a few hours. Vercel's Domains page shows
-a green check when it's live and the certificate is issued.
-
-Then set `NEXT_PUBLIC_SITE_URL` (step 2) to the final address if it changed, and
-redeploy once more.
+So: if you check the page source and see `noindex`, that's correct, not broken.
 
 ---
 
 ## Part 3 — Fill in your content
 
-All of this is at `/admin`. It saves as you type — there is no save button.
+All at `/admin`. It saves as you type — there's no save button.
 
-### ⚠️ ☐ 9. Set the blog cover shape FIRST
+### ⚠️ ☐ 7. Set the blog cover shape FIRST
 
-**News** tab → **Cover orientation (all posts)**.
+**News** tab → **Cover orientation (all posts)** → pick 9:16 tall, 4:5
+portrait, 1:1 square, 3:2 or 16:9 wide. It's on 4:5 now.
 
-Pick the shape you want for every blog cover: 9:16 tall, 4:5 portrait, 1:1
-square, 3:2 or 16:9 wide.
+**Before you upload any covers.** The cropper matches whatever is selected, so
+changing it later means re-cropping everything you'd already done.
 
-**Do this before uploading any covers.** The cropper matches whatever is
-selected here, so changing it later means re-uploading every cover you'd already
-done.
+The existing 31 covers came across at full size and are cropped by CSS, so they
+follow this setting automatically — it's only *your* uploads that get baked to
+the shape.
 
-While you're on that tab you can also set card width, title font, size, weight,
-padding, alignment, case, colour and how dark the overlay behind the title sits.
-
----
-
-### ☐ 10. Upload the blog covers
-
-**News** tab → open each post → **Cover image** → **Upload**.
-
-The cropper opens automatically. Drag to reposition, slide to zoom, then
-**Use this crop**.
-
-There are 12 posts already loaded with their real titles and text from the old
-site. Right now they show a faded logo as a placeholder.
-
-Fill in **Cover alt text** too — one short sentence describing the image. It
-helps Google Images and screen readers.
+Same tab: card width, gap, corner radius, and the title's font, size, weight,
+padding, alignment, case, colour and overlay darkness.
 
 ---
 
-### ☐ 11. Add the reels
+### ☐ 8. Add the reels
 
-**Reels** tab. Nothing is in here yet — both grids on the home page currently
-collapse to a "Watch on Instagram" band.
+**Reels** tab. Empty right now — both home-page grids show a "Watch on
+Instagram" band until you add some.
 
 **Read this first:** each tile plays a video file you upload, not an Instagram
-embed. Instagram's own embed won't autoplay silently and drags in its own header
-and caption, which wrecks the edge-to-edge grid. Clicking a tile still opens the
-real Instagram post.
+embed. Instagram's embed won't autoplay silently and drags in its own header
+and caption, which wrecks the edge-to-edge grid. Clicking a tile still opens
+the real Instagram post.
 
-For each reel:
+Per reel:
 
 1. **Paste the Instagram permalink** (`https://www.instagram.com/reel/...`).
-   You can bulk-paste a whole list at once in the box at the top.
-2. **Upload the video.** Your original export is best. Otherwise download the
-   reel from Instagram.
-3. **Optionally upload a poster frame** — the still shown while the video loads.
-4. **Alt text** — one sentence on what's in the reel.
+   Bulk-paste a whole list at once in the box at the top.
+2. **Upload the video** — your original export, or the reel downloaded from
+   Instagram.
+3. **Poster frame** (optional) — the still shown while the video loads.
+4. **Alt text** — one sentence on what's in it.
 
-Start with 8–12. The bottom grid keeps loading more as you scroll, so the more
-you add the longer it runs.
-
----
-
-### ☐ 12. Producer headshots
-
-**About Us** tab → scroll to **Producers**.
-
-Taylor Drew and Justin Hartmann are already there with bios — the headshots are
-empty. Upload one for each (square crop) and edit the bios to whatever you'd
-rather they said.
+Start with 8–12. The bottom grid keeps loading as you scroll, so more is better.
 
 ---
 
-### ☐ 13. Logo gallery
+### ☐ 9. Producer headshots
 
-**About Us** tab → **Logo gallery**.
-
-Two versions of the mark are in there. Add every other variant you have —
-alternate logos, event art, flash sheets. Set **Image size inside each tile**
-and **Columns** to taste.
+**About Us** → **Producers**. Taylor Drew and Justin Hartmann are there with
+bios; the headshots are empty. Upload one each (square crop) and rewrite the
+bios however you like — I drafted them from the live site's About page.
 
 ---
 
-### ☐ 14. Check the SEO fields
+### ☐ 10. Add the rest of the logos
 
-**Every tab has an SEO section at the bottom**, and every post has its own.
+**About Us** → **Logo gallery** → **Add a logo** → **Upload**.
 
-They're already filled in with suggestions built from your content — meta title,
-description, keywords, share image, an AI summary for ChatGPT/Claude/Perplexity,
-and FAQ entries.
+Two are in there. **The three you sent me came through as chat images, not
+files, so I couldn't add them** — drag each into the uploader and it's done in
+about twenty seconds:
 
-You don't have to touch any of it. But it's worth reading through the **Home**
-and **About Us** ones and making them sound like you. Each field has a character
-meter and a live Google preview underneath so you can see exactly how it'll look.
+- the tattoo machine crossed with a microphone
+- the skull with two crossed mics and **STRIP DOWN FOR STAND-UP**
+- the original flash circle, if your copy is cleaner than the one I pulled off
+  the site
+
+That third one carries the tagline — worth also setting as the share image
+under **Site & SEO → Share image**, so it's what shows when someone posts a
+link.
 
 ---
 
-## Part 4 — After launch
+### ☐ 11. Paste in the Shopify store
 
-### ☐ 15. Tell Google the site exists
+**Shop** tab. `/shop` shows a dashed empty box until you do.
 
-1. Go to **https://search.google.com/search-console**
-2. Add `pinsandneedlescomedy.com` as a property (verify by DNS record).
+1. Shopify admin → **Sales channels** → **Buy Button**.
+   (Missing? **Settings** → **Apps and sales channels** → **Shopify App Store**
+   → search "Buy Button" → add it.)
+2. **Create a Buy Button** → **Collection** → your products.
+3. Pick a layout → **Next** → **Copy code**.
+4. `/admin` → **Shop** → paste into **Embed code**.
+5. Check `/shop` on the Vercel URL.
+
+**Write down your `something.myshopify.com` address while you're in there.**
+After the DNS moves in Part 4, that's the only route back into the Buy Button
+generator.
+
+---
+
+### ☐ 12. Read the SEO fields (optional)
+
+Every tab has an SEO section, and so does every post. All 31 posts already have
+a meta title, description, keywords, share image and AI summary generated from
+their own text.
+
+Nothing here is required. But the **Home** and **About Us** ones are worth a
+read — they're what shows in Google and in ChatGPT answers. Each field has a
+character meter and a live Google preview underneath.
+
+---
+
+## Part 4 — When you're ready to switch the domain
+
+Nothing above depends on this. Do it whenever.
+
+### ☐ 13. Check who can see the site
+
+**Settings** → **Deployment Protection**.
+
+Protection on **preview** deployments is fine — leave it. If anything covers
+**Production** or **All Deployments**, turn it off, or visitors will hit a
+Vercel login instead of your site.
+
+### ⚠️ ☐ 14. Make sure step 11 is done
+
+The moment the DNS moves, `pinsandneedlescomedy.com` stops serving Shopify. If
+the Buy Button code isn't pasted in yet, your store goes dark.
+
+### ☐ 15. Move the DNS
+
+**Settings** → **Domains** → **Add** → `pinsandneedlescomedy.com` → **Add**.
+
+Vercel shows you the records. At your DNS host (possibly Shopify):
+
+1. Point the **A record** for `@` at the IP Vercel gives you.
+2. Point the **CNAME** for `www` at the value Vercel gives you.
+3. Remove the old Shopify records for those two names.
+
+10 minutes to a few hours. Vercel's Domains page goes green when the
+certificate is issued.
+
+Then load the site and view source — `noindex` should be gone. That's step 6
+switching over by itself.
+
+### ☐ 16. Tell Google it exists
+
+1. **https://search.google.com/search-console**
+2. Add `pinsandneedlescomedy.com` (verify by DNS record).
 3. **Sitemaps** → submit `sitemap.xml`.
 
-The site also publishes `/rss.xml` and `/llms.txt` automatically — the second is
-a plain-text brief written for AI answer engines. Nothing to do, they just work.
+`/rss.xml` and `/llms.txt` publish themselves — the second is a plain-text
+brief for AI answer engines. Nothing to do.
 
-### ☐ 16. Look at it on your phone
+### ☐ 17. Last passes
 
-Open the real domain on a phone. Check the home page, one blog post, and the
-shop page.
-
-### ☐ 17. Change the admin password
-
-If you left it as `weed`, set `ADMIN_PASSWORD` in Vercel to something else and
-redeploy. Anyone who reads this file knows the default.
+- Open the real domain on your phone. Home, one post, the shop.
+- If `ADMIN_PASSWORD` is still `weed`, change it and redeploy. Anyone reading
+  this file knows the default.
 
 ---
 
-## If something goes wrong
+## Already done — nothing needed from you
 
-| What you see | What it means |
+- All **31 blog posts** migrated from the live site with their original text,
+  dates and cover photos. Not summaries — the actual posts.
+- SEO on every page and post: meta title, description, keywords, share image,
+  canonical, AI summary, FAQ. Plus sitemap, robots, RSS, `llms.txt` and
+  structured data.
+- The `noindex` guard in step 6.
+- About Us copy, the show description and format, and both producer bios.
+- 30 tests and CI running on every push.
+
+---
+
+## If something looks wrong
+
+| What you see | What it is |
 | --- | --- |
-| Orange banner in `/admin` | No Blob store. Step 3, then step 4. |
-| `Save failed — retrying` | Storage is unreachable. It retries by itself; if it persists, check the Blob store is still connected. |
-| Logged out of `/admin` after a deploy | `ADMIN_SECRET` isn't set. Step 2. |
-| Home page reels show "Watch on Instagram" | No reels added yet. Step 11. |
-| Blog covers show a faded logo | No cover uploaded for that post. Step 10. |
-| `/shop` shows a dashed empty box | No Shopify embed code pasted. Step 7. |
-| Visitors hit a Vercel login | Deployment protection is covering production. Step 6. |
+| Orange banner in `/admin` | No Blob store. Step 3, then 4. |
+| `Save failed — retrying` | Storage unreachable. It retries itself; if it sticks, check the Blob store is still connected. |
+| Logged out after every deploy | `ADMIN_SECRET` not set. Step 2. |
+| `noindex` in the page source | Correct on the Vercel URL. Step 6. |
+| Reels show "Watch on Instagram" | No reels yet. Step 8. |
+| A post shows a faded logo | That post has no cover. Two of the 31 never had one. |
+| `/shop` shows a dashed box | No embed code. Step 11. |
+| Visitors hit a Vercel login | Protection covering production. Step 13. |
 
 Full reference in `README.md`.
