@@ -1,11 +1,18 @@
 import type { MetadataRoute } from "next";
 import { getContent } from "@/lib/store";
+import { onCanonicalHost } from "@/lib/host";
 
 export const dynamic = "force-dynamic";
 
 export default async function robots(): Promise<MetadataRoute.Robots> {
   const { site } = await getContent();
   const base = site.url.replace(/\/+$/, "");
+
+  // Served on anything other than the real domain — a *.vercel.app address
+  // before the DNS moves, say — this copy stays out of every index.
+  if (!(await onCanonicalHost(base))) {
+    return { rules: [{ userAgent: "*", disallow: "/" }] };
+  }
 
   // Answer engines are explicitly welcomed — this is the AI-SEO half. Each one
   // needs its own copy of the disallow list: a crawler obeys only the group

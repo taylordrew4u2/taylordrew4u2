@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { site, contact } = await getContent();
-  return toMetadata(site, contact.seo, "/contact");
+  return await toMetadata(site, contact.seo, "/contact");
 }
 
 export default async function ContactPage() {

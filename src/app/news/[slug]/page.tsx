@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const post = posts.find((entry) => entry.slug === slug);
   if (!post) return { title: "Not found" };
 
-  const meta = toMetadata(site, post.seo, `/news/${post.slug}`);
+  const meta = await toMetadata(site, post.seo, `/news/${post.slug}`);
   return {
     ...meta,
     openGraph: {

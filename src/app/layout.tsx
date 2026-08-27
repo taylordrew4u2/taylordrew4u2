@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Archivo_Black, Inter } from "next/font/google";
 import { getContent } from "@/lib/store";
 import { absoluteUrl } from "@/lib/seo";
+import { onCanonicalHost } from "@/lib/host";
 import SiteFooter from "@/components/SiteFooter";
 import "./globals.css";
 
@@ -23,6 +24,7 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata(): Promise<Metadata> {
   const { site } = await getContent();
   const base = site.url || "https://pinsandneedlescomedy.com";
+  const indexable = (await onCanonicalHost(base)) && !site.seo.noindex;
   return {
     metadataBase: new URL(base),
     title: {
@@ -51,9 +53,9 @@ export async function generateMetadata(): Promise<Metadata> {
       description: site.seo.description,
       images: [absoluteUrl(base, site.seo.ogImage || "/brand/icon.png")],
     },
-    robots: site.seo.noindex
-      ? { index: false, follow: false }
-      : { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 },
+    robots: indexable
+      ? { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 }
+      : { index: false, follow: false },
   };
 }
 

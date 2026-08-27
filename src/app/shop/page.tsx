@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { site, shop } = await getContent();
-  return toMetadata(site, shop.seo, "/shop");
+  return await toMetadata(site, shop.seo, "/shop");
 }
 
 export default async function ShopPage() {
