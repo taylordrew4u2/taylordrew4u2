@@ -2,6 +2,7 @@ import "server-only";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { defaultContent } from "./defaults";
+import { merge } from "./merge";
 import type { Content } from "./types";
 
 /**
@@ -28,21 +29,6 @@ const BLOB_KEY = "content/content.json";
 let cache: { value: Content; at: number } | null = null;
 const TTL_MS = driver === "blob" ? 3_000 : 500;
 
-type Plain = Record<string, unknown>;
-const isPlain = (v: unknown): v is Plain =>
-  typeof v === "object" && v !== null && !Array.isArray(v);
-
-/** Merge stored content over the defaults so new fields appear without a migration. */
-function merge<T>(base: T, patch: unknown): T {
-  if (!isPlain(patch)) return patch === undefined ? base : (patch as T);
-  if (!isPlain(base)) return patch as T;
-  const out: Plain = { ...base };
-  for (const [key, value] of Object.entries(patch)) {
-    out[key] = key in base ? merge((base as Plain)[key], value) : value;
-  }
-  return out as T;
-}
-
 async function readRaw(): Promise<unknown> {
   if (driver === "blob") {
     const { list } = await import("@vercel/blob");
@@ -60,17 +46,33 @@ async function readRaw(): Promise<unknown> {
   }
 }
 
-export async function getContent(): Promise<Content> {
-  if (cache && Date.now() - cache.at < TTL_MS) return cache.value;
+/**
+ * Load content, reporting whether storage was actually readable.
+ *
+ * The distinction matters: "nothing stored yet" is a fresh site and the
+ * defaults are the right answer, but "the read blew up" means we do not know
+ * what is stored — and writing on top of that guess would destroy it.
+ */
+async function load(): Promise<{ value: Content; readable: boolean }> {
+  if (cache && Date.now() - cache.at < TTL_MS) return { value: cache.value, readable: true };
+
   let stored: unknown = null;
   try {
     stored = await readRaw();
   } catch (error) {
-    console.error("[store] read failed, serving defaults:", error);
+    console.error("[store] read failed, serving defaults for this request:", error);
+    // Deliberately not cached: a transient failure must not pin the defaults
+    // in front of real content for the whole TTL.
+    return { value: defaultContent, readable: false };
   }
+
   const value = stored ? merge(defaultContent, stored) : defaultContent;
   cache = { value, at: Date.now() };
-  return value;
+  return { value, readable: true };
+}
+
+export async function getContent(): Promise<Content> {
+  return (await load()).value;
 }
 
 export async function saveContent(next: Content): Promise<Content> {
@@ -99,12 +101,13 @@ export async function saveContent(next: Content): Promise<Content> {
 
 /** Apply a partial patch on top of what is stored. Used by the auto-saving admin. */
 export async function patchContent(patch: unknown): Promise<Content> {
-  const current = await getContent();
-  return saveContent(merge(current, patch));
-}
-
-export function invalidate() {
-  cache = null;
+  const { value, readable } = await load();
+  if (!readable) {
+    // Merging onto the defaults here would write them over whatever is really
+    // stored. Fail instead; the admin surfaces it and retries.
+    throw new Error("Refusing to save: existing content could not be read");
+  }
+  return saveContent(merge(value, patch));
 }
 
 /** Store an uploaded file and return its public URL. */

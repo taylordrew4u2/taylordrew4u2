@@ -100,6 +100,24 @@ VPS, Docker.
 
 ---
 
+# Checks
+
+```bash
+npm run typecheck   # tsc
+npm test            # node's test runner, no extra dependencies
+npm run build       # the same build Vercel runs
+```
+
+The tests cover the pure logic that would otherwise break silently: the deep
+merge that decides how saved content layers over the defaults, slug and meta
+text generation, and the markdown-lite renderer — including that HTML in a post
+body is escaped rather than executed.
+
+GitHub Actions runs all three on every push to `main` and every pull request
+(`.github/workflows/ci.yml`).
+
+---
+
 # The admin
 
 `/admin`, password `weed` (or whatever you set `ADMIN_PASSWORD` to).
