@@ -1,0 +1,13 @@
+node_modules
+.next
+out
+.env
+.env.local
+.DS_Store
+*.tsbuildinfo
+next-env.d.ts
+
+# Runtime content written by /admin (fs storage driver)
+/data/content.json
+/public/uploads/*
+!/public/uploads/.gitkeep
