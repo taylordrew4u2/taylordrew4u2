@@ -185,3 +185,59 @@ export function contentTypeFor(path: string): string {
   const extension = path.split(".").pop()?.toLowerCase() ?? "";
   return CONTENT_TYPES[extension] ?? "application/octet-stream";
 }
+
+/**
+ * Check that the configured repo and branch are actually usable.
+ *
+ * A 404 when reading content.json is ambiguous on its own: it means "nothing
+ * saved here yet" for a working setup and "wrong repo, or a token that cannot
+ * see it" for a broken one. Both then look like a fresh site while every save
+ * fails. This asks the repo and the branch directly so the two can be told
+ * apart, and returns a sentence naming the fix, or null when all is well.
+ */
+export async function checkAccess(
+  config: GithubConfig,
+  fetchImpl: Fetcher = fetch
+): Promise<string | null> {
+  const repo = await fetchImpl(`${config.api}/repos/${config.owner}/${config.repo}`, {
+    headers: headers(config, "application/vnd.github+json"),
+    cache: "no-store",
+  });
+
+  const where = `${config.owner}/${config.repo}`;
+
+  if (repo.status === 401) {
+    return `The GitHub token is not valid (401). Generate a new fine-grained token for ${where} with Contents: Read and write, update CONTENT_GITHUB_TOKEN, and redeploy.`;
+  }
+  if (repo.status === 404) {
+    return `The repo ${where} could not be found with this token (404). Either CONTENT_GITHUB_REPO has the wrong owner/name, or the token was not granted access to that repository.`;
+  }
+  if (repo.status === 403) {
+    return `The GitHub token is not allowed to use ${where} (403). Check that it lists that repository and has Contents: Read and write.`;
+  }
+  if (!repo.ok) {
+    return `GitHub returned ${repo.status} for ${where}.`;
+  }
+
+  const info = (await repo.json()) as { permissions?: { push?: boolean }; default_branch?: string };
+  if (info.permissions && info.permissions.push === false) {
+    return `The GitHub token can read ${where} but not write to it. Edit the token's permissions so Contents is "Read and write", then redeploy.`;
+  }
+
+  const branch = await fetchImpl(
+    `${config.api}/repos/${config.owner}/${config.repo}/branches/${encodeURIComponent(config.branch)}`,
+    { headers: headers(config, "application/vnd.github+json"), cache: "no-store" }
+  );
+
+  if (branch.status === 404) {
+    const suggestion = info.default_branch
+      ? ` Its default branch is "${info.default_branch}" — either set CONTENT_GITHUB_BRANCH to that, or leave it unset if that is "main".`
+      : " The repository has no commits yet: open it on github.com and add a README so a first branch exists.";
+    return `The branch "${config.branch}" does not exist in ${where}.${suggestion}`;
+  }
+  if (!branch.ok) {
+    return `GitHub returned ${branch.status} for the branch "${config.branch}" in ${where}.`;
+  }
+
+  return null;
+}

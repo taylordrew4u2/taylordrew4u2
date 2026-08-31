@@ -4,6 +4,7 @@ import path from "node:path";
 import { defaultContent } from "./defaults";
 import { merge } from "./merge";
 import {
+  checkAccess as githubCheckAccess,
   githubConfig,
   mediaUrl,
   readFile as githubRead,
@@ -217,7 +218,20 @@ export async function storageWarning(): Promise<string | null> {
     return "This deployment has no content store, so nothing you change here will save. Set CONTENT_GITHUB_TOKEN and CONTENT_GITHUB_REPO in the Vercel project settings (see the README), or add a Vercel Blob store, then redeploy.";
   }
 
-  const { readable } = await load();
+  const { value, readable } = await load();
+
+  // A GitHub 404 reads as "nothing saved yet", which is right for a fresh
+  // repo and wrong for a misconfigured one — and both would otherwise sit
+  // here silently while every save failed. Ask the repo directly.
+  if (driver === "github" && readable && value.updatedAt === defaultContent.updatedAt) {
+    try {
+      const problem = await githubCheckAccess(requireGithub());
+      if (problem) return `Saving will not work yet. ${problem}`;
+    } catch (error) {
+      console.error("[store] GitHub access check failed:", error);
+    }
+  }
+
   if (!readable) {
     const where =
       driver === "github"

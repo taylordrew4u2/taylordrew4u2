@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  checkAccess,
   contentTypeFor,
   githubConfig,
   mediaUrl,
@@ -161,4 +162,51 @@ test("content types cover what the uploader accepts", () => {
   assert.equal(contentTypeFor("a/b/c.webp"), "image/webp");
   assert.equal(contentTypeFor("clip.MP4"), "video/mp4");
   assert.equal(contentTypeFor("noextension"), "application/octet-stream");
+});
+
+test("checkAccess names a repo the token cannot see", async () => {
+  // The failure that looks exactly like a healthy empty repo: reading
+  // content.json 404s, so the site serves defaults and every save fails.
+  const { fetchImpl } = fakeGithub([{ status: 404, body: { message: "Not Found" } }]);
+  const problem = await checkAccess(config, fetchImpl);
+  assert.match(problem ?? "", /could not be found with this token/);
+  assert.match(problem ?? "", /o\/r/);
+});
+
+test("checkAccess names a bad or expired token", async () => {
+  const { fetchImpl } = fakeGithub([{ status: 401, body: { message: "Bad credentials" } }]);
+  assert.match((await checkAccess(config, fetchImpl)) ?? "", /not valid \(401\)/);
+});
+
+test("checkAccess catches a read-only token before a save silently fails", async () => {
+  const { fetchImpl } = fakeGithub([
+    { status: 200, body: { permissions: { push: false }, default_branch: "main" } },
+  ]);
+  assert.match((await checkAccess(config, fetchImpl)) ?? "", /read .* but not write/);
+});
+
+test("checkAccess spots a branch that does not exist and suggests the real one", async () => {
+  const { fetchImpl } = fakeGithub([
+    { status: 200, body: { permissions: { push: true }, default_branch: "master" } },
+    { status: 404, body: { message: "Branch not found" } },
+  ]);
+  const problem = await checkAccess(config, fetchImpl);
+  assert.match(problem ?? "", /branch "main" does not exist/);
+  assert.match(problem ?? "", /default branch is "master"/);
+});
+
+test("checkAccess explains an empty repo with no commits at all", async () => {
+  const { fetchImpl } = fakeGithub([
+    { status: 200, body: { permissions: { push: true } } },
+    { status: 404, body: { message: "Branch not found" } },
+  ]);
+  assert.match((await checkAccess(config, fetchImpl)) ?? "", /no commits yet.*add a README/s);
+});
+
+test("checkAccess stays quiet when everything is in order", async () => {
+  const { fetchImpl } = fakeGithub([
+    { status: 200, body: { permissions: { push: true }, default_branch: "main" } },
+    { status: 200, body: { name: "main" } },
+  ]);
+  assert.equal(await checkAccess(config, fetchImpl), null);
 });

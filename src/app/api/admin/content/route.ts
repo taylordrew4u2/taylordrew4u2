@@ -31,6 +31,13 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ ok: true, updatedAt: content.updatedAt });
   } catch (error) {
     console.error("[admin] save failed:", error);
-    return NextResponse.json({ ok: false, error: "Save failed" }, { status: 500 });
+    // Pass the store's own words back to the admin. Whoever sees this is
+    // already logged in, and "Save failed" alone sends them hunting through
+    // deployment logs they may not be able to reach.
+    const detail = error instanceof Error ? error.message : "";
+    return NextResponse.json(
+      { ok: false, error: detail ? `Save failed — ${detail}` : "Save failed" },
+      { status: 500 }
+    );
   }
 }
