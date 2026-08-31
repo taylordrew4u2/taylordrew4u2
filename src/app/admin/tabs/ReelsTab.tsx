@@ -5,6 +5,7 @@ import type { Content, Reel } from "@/lib/types";
 import { instagramCode } from "@/lib/render";
 import { Area, Button, Card, Row, Section, Text, Toggle } from "../ui";
 import MediaField from "../MediaField";
+import InstagramSync from "../InstagramSync";
 import type { Update } from "../types";
 
 const newReel = (url = ""): Reel => ({
@@ -16,9 +17,19 @@ const newReel = (url = ""): Reel => ({
   alt: "Pins & Needles Comedy Instagram reel",
   order: 0,
   published: true,
+  igTimestamp: "",
+  igMediaId: "",
 });
 
-export default function ReelsTab({ content, update }: { content: Content; update: Update }) {
+export default function ReelsTab({
+  content,
+  update,
+  refresh,
+}: {
+  content: Content;
+  update: Update;
+  refresh: () => Promise<void>;
+}) {
   const [bulk, setBulk] = useState("");
 
   const addBulk = () => {
@@ -39,6 +50,13 @@ export default function ReelsTab({ content, update }: { content: Content; update
 
   return (
     <>
+      <InstagramSync
+        instagram={content.instagram}
+        totalReels={content.reels.length}
+        onTokenChange={(token) => update((d) => void (d.instagram.accessToken = token))}
+        onSynced={refresh}
+      />
+
       <Section
         title="How the reel grid works"
         hint="Instagram blocks silent autoplay inside its own embed, so each tile plays a video file you upload here and links out to the real post when clicked."

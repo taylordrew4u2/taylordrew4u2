@@ -122,6 +122,26 @@ export default function AdminApp({
     window.location.reload();
   };
 
+  /**
+   * Reload straight from storage and replace local state with it.
+   *
+   * The Instagram sync route writes directly to storage on the server, so
+   * this browser's in-memory copy is stale the moment a sync finishes. If
+   * that stale copy were left to autosave later — the normal flow always
+   * sends a full snapshot — it would silently overwrite everything the sync
+   * just added. Anything that changes content from outside this component's
+   * own state must call this afterward.
+   */
+  const refresh = useCallback(async () => {
+    const response = await fetch("/api/admin/content", { cache: "no-store" });
+    const data = await response.json().catch(() => ({}));
+    if (response.ok && data.ok) {
+      dirtyRef.current = false;
+      setContent(data.content as Content);
+      setSave("saved");
+    }
+  }, []);
+
   const status =
     save === "saving"
       ? { text: "Saving…", tone: "text-amber-400" }
@@ -187,7 +207,7 @@ export default function AdminApp({
         </p>
 
         {tab === "home" ? <HomeTab content={content} update={update} /> : null}
-        {tab === "reels" ? <ReelsTab content={content} update={update} /> : null}
+        {tab === "reels" ? <ReelsTab content={content} update={update} refresh={refresh} /> : null}
         {tab === "news" ? <NewsTab content={content} update={update} /> : null}
         {tab === "shop" ? <ShopTab content={content} update={update} /> : null}
         {tab === "about" ? <AboutTab content={content} update={update} /> : null}
