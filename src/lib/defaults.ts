@@ -324,8 +324,8 @@ Standard microphone and sound system, basic stage lighting, minimal setup and br
   contact: {
     heading: "Contact",
     intro: "Booking, submissions, press and everything else.",
-    email: "pinsandneedlescomedy@gmail.com",
-    bookingEmail: "pinsandneedlescomedy@gmail.com",
+    email: "admin@pinsandneedlescomedy.com",
+    bookingEmail: "admin@pinsandneedlescomedy.com",
     submissionsUrl: "https://www.instagram.com/pinsandneedlescomedy/",
     submissionsLabel: "Comic submissions",
     city: "New York City",
