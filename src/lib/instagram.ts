@@ -139,6 +139,80 @@ export function mergeReels(existing: Reel[], additions: Reel[], mode: "prepend" 
   return merged.map((reel, index) => ({ ...reel, order: index }));
 }
 
+/**
+ * The real "Log in with Instagram" flow, so the admin never has to dig a
+ * token out of Meta's developer console by hand. It still needs one thing
+ * only the account owner can do first: register a free Meta app once and
+ * put its two credentials in this deployment's environment variables
+ * (INSTAGRAM_APP_ID, INSTAGRAM_APP_SECRET) — that step exists for every
+ * site that talks to Instagram's API, not just this one.
+ *
+ * Endpoints match Meta's current "Instagram API with Instagram Login"
+ * (the replacement for the retired Basic Display API). If Meta reshapes a
+ * response later, the defensive field checks below are the place to widen.
+ */
+
+export function buildAuthorizeUrl(appId: string, redirectUri: string, state: string): string {
+  const url = new URL("https://www.instagram.com/oauth/authorize");
+  url.searchParams.set("client_id", appId);
+  url.searchParams.set("redirect_uri", redirectUri);
+  url.searchParams.set("response_type", "code");
+  url.searchParams.set("scope", "instagram_business_basic");
+  url.searchParams.set("state", state);
+  return url.toString();
+}
+
+export async function exchangeCodeForToken(params: {
+  code: string;
+  redirectUri: string;
+  appId: string;
+  appSecret: string;
+}): Promise<{ accessToken: string }> {
+  const body = new URLSearchParams({
+    client_id: params.appId,
+    client_secret: params.appSecret,
+    grant_type: "authorization_code",
+    redirect_uri: params.redirectUri,
+    code: params.code,
+  });
+
+  const res = await fetch("https://api.instagram.com/oauth/access_token", { method: "POST", body });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`Instagram declined the authorization code: ${res.status} ${text.slice(0, 300)}`);
+  }
+
+  const data = (await res.json()) as {
+    access_token?: string;
+    data?: { access_token?: string }[];
+  };
+  const accessToken = data.access_token || data.data?.[0]?.access_token;
+  if (!accessToken) throw new Error("Instagram's response did not include an access token");
+  return { accessToken };
+}
+
+export async function exchangeForLongLivedToken(
+  shortLivedToken: string,
+  appSecret: string
+): Promise<{ accessToken: string; tokenExpiresAt: string }> {
+  const url = new URL("https://graph.instagram.com/access_token");
+  url.searchParams.set("grant_type", "ig_exchange_token");
+  url.searchParams.set("client_secret", appSecret);
+  url.searchParams.set("access_token", shortLivedToken);
+
+  const res = await fetch(url.toString(), { cache: "no-store" });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`Could not get a long-lived token: ${res.status} ${text.slice(0, 300)}`);
+  }
+
+  const data = (await res.json()) as { access_token: string; expires_in: number };
+  return {
+    accessToken: data.access_token,
+    tokenExpiresAt: new Date(Date.now() + data.expires_in * 1000).toISOString(),
+  };
+}
+
 export type SyncState = { reels: Reel[]; cursor: string; caughtUp: boolean };
 
 export type SyncDeps = {

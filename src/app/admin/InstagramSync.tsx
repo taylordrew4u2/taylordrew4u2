@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { InstagramSync as InstagramSyncState } from "@/lib/types";
 import { Button, Section, Text } from "./ui";
 
@@ -17,6 +17,23 @@ function formatWhen(iso: string): string {
   return date.toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
 }
 
+/** Read ?instagram=connected|error once, then scrub it so a refresh doesn't re-show the banner. */
+function useOAuthResult() {
+  const [result, setResult] = useState<{ status: string; message: string } | null>(null);
+
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const status = url.searchParams.get("instagram");
+    if (!status) return;
+    setResult({ status, message: url.searchParams.get("message") || "" });
+    url.searchParams.delete("instagram");
+    url.searchParams.delete("message");
+    window.history.replaceState({}, "", url.toString());
+  }, []);
+
+  return result;
+}
+
 export default function InstagramSync({
   instagram,
   totalReels,
@@ -31,6 +48,16 @@ export default function InstagramSync({
   const [running, setRunning] = useState(false);
   const [progress, setProgress] = useState(0);
   const [roundError, setRoundError] = useState("");
+  const [showManual, setShowManual] = useState(false);
+  const oauthResult = useOAuthResult();
+
+  // Instagram just redirected back — the token is already saved server-side,
+  // so this is the same "reload, don't autosave a stale snapshot" rule the
+  // sync button follows below.
+  useEffect(() => {
+    if (oauthResult?.status === "connected") void onSynced();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [oauthResult]);
 
   const runFullSync = async () => {
     setRunning(true);
@@ -46,12 +73,7 @@ export default function InstagramSync({
         added += data.added ?? 0;
         setProgress(added);
 
-        // Fully caught up with nothing left waiting on the current page — done.
         if (data.caughtUp && !data.remaining) break;
-        // A round that added nothing and isn't reporting more to fetch would
-        // otherwise spin forever; treat that as done too.
-        if (!data.added && !data.remaining && data.caughtUp) break;
-
         await sleep(DELAY_MS);
       }
     } catch (error) {
@@ -67,14 +89,25 @@ export default function InstagramSync({
       title="Instagram sync"
       hint="Pull every reel from @pinsandneedlescomedy automatically instead of adding them one at a time."
     >
+      {oauthResult?.status === "connected" ? (
+        <p className="rounded-md border border-emerald-800/60 bg-emerald-950/40 px-4 py-3 text-[13px] text-emerald-300">
+          Instagram connected. Click <strong>Sync all reels</strong> below to pull them in.
+        </p>
+      ) : null}
+      {oauthResult?.status === "error" ? (
+        <p className="rounded-md border border-red-800/60 bg-red-950/40 px-4 py-3 text-[13px] text-red-300">
+          {oauthResult.message || "Connecting to Instagram failed."}
+        </p>
+      ) : null}
+
       <div className="rounded-md border border-neutral-800 bg-neutral-900 p-4 text-[13px] leading-relaxed text-neutral-400">
         <p className="mb-2 text-neutral-200">One-time setup, on Instagram&apos;s side</p>
         <p className="mb-2">
-          This needs an access token from Instagram — there is no way around that step for anyone,
-          it is how Instagram confirms the account owner actually approved the connection:
+          Meta requires this — there is no way around it for anyone, it is how Instagram confirms
+          the account owner actually approved the connection:
         </p>
         <ol className="ml-4 list-decimal space-y-1">
-          <li>The Instagram account needs to be a Professional (Business or Creator) account — free to switch to in the Instagram app under Settings → Account type.</li>
+          <li>Switch the Instagram account to Professional (Business or Creator) — free, in the Instagram app under Settings → Account type.</li>
           <li>
             Create a free app at{" "}
             <a
@@ -84,28 +117,49 @@ export default function InstagramSync({
               className="underline underline-offset-2 hover:text-neutral-200"
             >
               developers.facebook.com
-            </a>{" "}
-            and add the Instagram product to it.
+            </a>
+            , add the Instagram product to it, and add an OAuth redirect URI of{" "}
+            <code className="text-neutral-200">{"<your site>"}/api/admin/instagram/callback</code>.
           </li>
-          <li>Follow Meta&apos;s flow there to generate a long-lived access token for the account.</li>
-          <li>Paste that token below.</li>
+          <li>Add the Instagram account as a tester on that app — the app can stay in Development mode, no review needed for one account.</li>
+          <li>
+            Copy the app&apos;s <strong>App ID</strong> and <strong>App Secret</strong> into this
+            deployment&apos;s environment variables as <code className="text-neutral-200">INSTAGRAM_APP_ID</code> and{" "}
+            <code className="text-neutral-200">INSTAGRAM_APP_SECRET</code>, then redeploy.
+          </li>
         </ol>
         <p className="mt-2">
-          The token lasts about 60 days; this site refreshes it automatically on every sync, so it
-          never needs to be redone as long as a sync runs at least once every couple of months.
+          After that, connecting is one click below — a real Instagram login and approval screen,
+          not a token to copy anywhere. It refreshes itself automatically before its ~60-day expiry.
         </p>
       </div>
 
-      <Text
-        label="Access token"
-        type="password"
-        value={instagram.accessToken}
-        onChange={onTokenChange}
-        placeholder="Paste the long-lived token here"
-      />
+      <div className="flex flex-wrap items-center gap-3">
+        <Button tone="primary" onClick={() => { window.location.href = "/api/admin/instagram/authorize"; }}>
+          {instagram.accessToken ? "Reconnect Instagram" : "Log in with Instagram"}
+        </Button>
+        <button
+          type="button"
+          onClick={() => setShowManual((v) => !v)}
+          className="text-[12px] text-neutral-500 underline underline-offset-2 hover:text-neutral-300"
+        >
+          {showManual ? "Hide" : "I already have an access token"}
+        </button>
+      </div>
+
+      {showManual ? (
+        <Text
+          label="Access token"
+          type="password"
+          value={instagram.accessToken}
+          onChange={onTokenChange}
+          hint="only if you generated one directly in Meta's console instead of using the button above"
+        />
+      ) : null}
 
       <div className="rounded-md border border-neutral-800 bg-neutral-900 p-4 text-[13px] text-neutral-400">
         <p>Reels on the site now: <span className="text-neutral-200">{totalReels}</span></p>
+        <p>Connected: <span className="text-neutral-200">{instagram.accessToken ? "Yes" : "Not yet"}</span></p>
         <p>Last synced: <span className="text-neutral-200">{formatWhen(instagram.lastSyncedAt)}</span></p>
         {instagram.lastError ? (
           <p className="mt-2 text-red-400">Last error: {instagram.lastError}</p>
