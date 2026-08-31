@@ -8,6 +8,7 @@ import SiteTab from "./tabs/SiteTab";
 import HomeTab from "./tabs/HomeTab";
 import ReelsTab from "./tabs/ReelsTab";
 import NewsTab from "./tabs/NewsTab";
+import ShowsTab from "./tabs/ShowsTab";
 import ShopTab from "./tabs/ShopTab";
 import AboutTab from "./tabs/AboutTab";
 import ContactTab from "./tabs/ContactTab";
@@ -15,6 +16,7 @@ import ContactTab from "./tabs/ContactTab";
 const TABS = [
   { id: "home", label: "Home" },
   { id: "reels", label: "Reels" },
+  { id: "shows", label: "Shows" },
   { id: "news", label: "News" },
   { id: "shop", label: "Shop" },
   { id: "about", label: "About Us" },
@@ -33,12 +35,17 @@ function prefillSeo(content: Content): Content {
   next.site.seo = fillEmpty(next.site.seo, suggestFor(next, "site"));
   next.home.seo = fillEmpty(next.home.seo, suggestFor(next, "home"));
   next.news.seo = fillEmpty(next.news.seo, suggestFor(next, "news"));
+  next.showsPage.seo = fillEmpty(next.showsPage.seo, suggestFor(next, "shows"));
   next.shop.seo = fillEmpty(next.shop.seo, suggestFor(next, "shop"));
   next.about.seo = fillEmpty(next.about.seo, suggestFor(next, "about"));
   next.contact.seo = fillEmpty(next.contact.seo, suggestFor(next, "contact"));
   next.posts = next.posts.map((post) => ({
     ...post,
     seo: fillEmpty(post.seo, suggestFor(next, "post", post)),
+  }));
+  next.shows = next.shows.map((show) => ({
+    ...show,
+    seo: fillEmpty(show.seo, suggestFor(next, "show", undefined, show)),
   }));
   return next;
 }
@@ -208,6 +215,7 @@ export default function AdminApp({
 
         {tab === "home" ? <HomeTab content={content} update={update} /> : null}
         {tab === "reels" ? <ReelsTab content={content} update={update} refresh={refresh} /> : null}
+        {tab === "shows" ? <ShowsTab content={content} update={update} /> : null}
         {tab === "news" ? <NewsTab content={content} update={update} /> : null}
         {tab === "shop" ? <ShopTab content={content} update={update} /> : null}
         {tab === "about" ? <AboutTab content={content} update={update} /> : null}

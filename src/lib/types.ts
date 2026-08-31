@@ -178,6 +178,79 @@ export type ContactPage = {
   seo: Seo;
 };
 
+/** One person or business on a show bill: comic, host, tattoo artist, vendor, DJ. */
+export type ShowPerformer = {
+  id: string;
+  name: string;
+  /** Free text — "Comedian", "Host", "Tattoo artist", "Vendor". Used to group the bill. */
+  role: string;
+  note: string;
+  imageUrl: string;
+  imageAlt: string;
+  url: string;
+};
+
+export type ShowPhoto = { id: string; url: string; alt: string; caption: string };
+
+export type ShowStatus = "scheduled" | "sold-out" | "postponed" | "cancelled";
+
+/** Everything about one night: when, where, who, how to get in, and what happened. */
+export type Show = {
+  id: string;
+  slug: string;
+  title: string;
+  tagline: string;
+  /** ISO yyyy-mm-dd, in New York time. Drives upcoming vs. past. */
+  date: string;
+  /** 24h HH:MM. Empty means "not announced". */
+  doorsTime: string;
+  startTime: string;
+  endTime: string;
+  venueName: string;
+  venueUrl: string;
+  address: string;
+  city: string;
+  region: string;
+  postalCode: string;
+  country: string;
+  mapUrl: string;
+  roomNote: string;
+  ticketUrl: string;
+  ticketLabel: string;
+  price: string;
+  currency: string;
+  ageRestriction: string;
+  status: ShowStatus;
+  posterUrl: string;
+  posterAlt: string;
+  /** Markdown-lite, same as a blog post body. */
+  description: string;
+  lineup: ShowPerformer[];
+  photos: ShowPhoto[];
+  /** Slug of the /news post recapping this show, if there is one. */
+  recapSlug: string;
+  instagramUrl: string;
+  published: boolean;
+  featured: boolean;
+  seo: Seo;
+};
+
+export type ShowsPage = {
+  heading: string;
+  intro: string;
+  upcomingHeading: string;
+  pastHeading: string;
+  emptyText: string;
+  /** Crop orientation applied to every show poster. */
+  posterAspect: "9:16" | "4:5" | "1:1" | "3:2" | "16:9";
+  columns: number;
+  gap: number;
+  cornerRadius: number;
+  showPastShows: boolean;
+  pastLimit: number;
+  seo: Seo;
+};
+
 export type NewsPage = {
   heading: string;
   intro: string;
@@ -223,11 +296,13 @@ export type Content = {
   site: SiteSettings;
   home: HomePage;
   news: NewsPage;
+  showsPage: ShowsPage;
   shop: ShopPage;
   about: AboutPage;
   contact: ContactPage;
   blogSettings: BlogSettings;
   posts: Post[];
+  shows: Show[];
   reels: Reel[];
   instagram: InstagramSync;
 };

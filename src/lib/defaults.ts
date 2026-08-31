@@ -81,6 +81,7 @@ export const defaultContent: Content = {
     bodyFont: "'Inter', system-ui, -apple-system, sans-serif",
     nav: [
       { id: "nav-home", label: "Home", href: "/" },
+      { id: "nav-shows", label: "Shows", href: "/shows" },
       { id: "nav-shop", label: "Shop", href: "/shop" },
       { id: "nav-about", label: "About Us", href: "/about" },
       { id: "nav-contact", label: "Contact", href: "/contact" },
@@ -231,6 +232,44 @@ export const defaultContent: Content = {
     }),
   },
 
+  showsPage: {
+    heading: "Shows",
+    intro:
+      "Every Pins & Needles Comedy night — who is on the bill, which tattoo artists are working, where it is and how to get in.",
+    upcomingHeading: "Upcoming",
+    pastHeading: "Past shows",
+    emptyText: "The next show has not been announced yet. Follow along on Instagram for the drop.",
+    posterAspect: "4:5",
+    columns: 3,
+    gap: 24,
+    cornerRadius: 0,
+    showPastShows: true,
+    pastLimit: 24,
+    seo: seo({
+      title: "Shows | Pins & Needles Comedy",
+      description:
+        "Upcoming Pins & Needles Comedy shows in New York City, with lineups, guest tattoo artists, venues, times and tickets.",
+      keywords: [
+        "pins and needles comedy shows",
+        "nyc comedy show tickets",
+        "brooklyn comedy tonight",
+        "tattoo comedy lineup",
+        taylorKeyword(PRODUCERS),
+      ],
+      canonical: `${SITE_URL}/shows`,
+      aiSummary: `Show listings for Pins & Needles Comedy, the New York City tattoo-culture stand-up show run by ${creditLine(
+        PRODUCERS
+      )}. Each listing carries the date, venue and address, door and set times, ticket link and price, the comedians on the bill, and the guest tattoo artists and vendors working that night.`,
+      faq: [
+        {
+          q: "Where can I find upcoming Pins & Needles Comedy shows?",
+          a: `Every announced show is listed at ${SITE_URL}/shows with its date, venue, lineup and ticket link.`,
+        },
+        taylorFaq(PRODUCERS, "Pins & Needles Comedy"),
+      ],
+    }),
+  },
+
   shop: {
     heading: "Shop",
     intro: "Tees, totes and caps. Shipped from the Pins & Needles Shopify store.",
@@ -375,6 +414,7 @@ Standard microphone and sound system, basic stage lighting, minimal setup and br
   },
 
   posts: SEED_POSTS.map(post),
+  shows: [],
 
   reels: [],
 

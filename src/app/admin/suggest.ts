@@ -1,6 +1,8 @@
-import type { Content, Post, Seo } from "@/lib/types";
+import type { Content, Post, Seo, Show } from "@/lib/types";
 import { clamp, stripMarkdown, suggestKeywords } from "@/lib/seo";
 import { creditLine, taylorFaq, taylorKeyword } from "@/lib/brand";
+import { formatDate } from "@/lib/render";
+import { formatTime, showSummary, venueLine } from "@/lib/shows";
 
 export type Suggestion = {
   title: string;
@@ -26,8 +28,9 @@ function base(content: Content) {
 /** Build an SEO suggestion for one page or post. All of it is editable afterwards. */
 export function suggestFor(
   content: Content,
-  key: "site" | "home" | "news" | "shop" | "about" | "contact" | "post",
-  post?: Post
+  key: "site" | "home" | "news" | "shows" | "show" | "shop" | "about" | "contact" | "post",
+  post?: Post,
+  show?: Show
 ): Suggestion {
   const site = content.site;
   const brand = site.name || "Pins & Needles Comedy";
@@ -75,6 +78,65 @@ export function suggestFor(
         ]
       );
     }
+    case "show": {
+      if (!show) break;
+      const where = venueLine(show);
+      const names = show.lineup.map((person) => person.name).filter(Boolean);
+      const when = `${formatDate(show.date)}${
+        show.startTime ? ` at ${formatTime(show.startTime)}` : ""
+      }`;
+      return make(
+        `${show.title} | ${when}`,
+        [
+          show.tagline || `${brand} live${where ? ` at ${show.venueName || where}` : ""}`,
+          where,
+          show.price ? `Tickets ${show.price}.` : "",
+        ]
+          .filter(Boolean)
+          .join(" · "),
+        `${show.title} is a live stand-up comedy show by ${brand}${
+          where ? ` at ${where}` : ""
+        } on ${when}. ${showSummary(show)} Produced by ${creditLine(content.about.producers)}.`,
+        `${show.title} ${show.tagline} ${show.description} ${where} ${names.join(" ")}`,
+        `/shows/${show.slug}`,
+        [
+          "nyc comedy show tickets",
+          show.city ? `${show.city.toLowerCase()} comedy show` : "",
+          ...names.map((name) => name.toLowerCase()),
+          taylorKeyword(content.about.producers),
+        ].filter(Boolean),
+        show.posterUrl || fallbackImage,
+        [
+          {
+            q: `When and where is ${show.title}?`,
+            a: `${when}${where ? ` at ${where}` : ""}.${
+              show.price ? ` Tickets are ${show.price}.` : ""
+            }${show.ageRestriction ? ` ${show.ageRestriction}.` : ""}`,
+          },
+          ...(names.length
+            ? [{ q: `Who is performing at ${show.title}?`, a: `${names.join(", ")}.` }]
+            : []),
+        ]
+      );
+    }
+    case "shows":
+      return make(
+        `Shows | ${brand}`,
+        `Upcoming ${brand} shows in New York City — lineups, guest tattoo artists, venues, times and tickets.`,
+        `Show listings for ${brand}, the NYC tattoo-culture stand-up show run by ${creditLine(
+          content.about.producers
+        )}. Each listing carries the date, venue and address, door and set times, ticket link and price, the comedians on the bill, and the guest tattoo artists and vendors working that night.`,
+        content.shows.map((entry) => `${entry.title} ${entry.tagline} ${entry.venueName}`).join(" "),
+        "/shows",
+        ["nyc comedy show tickets", "comedy tonight brooklyn", taylorKeyword(content.about.producers)],
+        fallbackImage,
+        [
+          {
+            q: `Where can I find upcoming ${brand} shows?`,
+            a: `Every announced show is listed at ${root}/shows with its date, venue, lineup and ticket link.`,
+          },
+        ]
+      );
     case "home":
       return make(
         `${brand} | NYC Tattoo Comedy Show & Underground Stand-Up`,

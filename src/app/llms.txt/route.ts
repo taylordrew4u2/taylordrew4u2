@@ -1,5 +1,6 @@
 import { getContent } from "@/lib/store";
 import { clamp, stripMarkdown } from "@/lib/seo";
+import { nyToday, splitShows, timeLine, venueLine } from "@/lib/shows";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +11,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const content = await getContent();
   const { site, about, shop, contact } = content;
+  const { upcoming, past } = splitShows(content.shows, nyToday());
   const base = site.url.replace(/\/+$/, "");
 
   const posts = content.posts
@@ -34,6 +36,7 @@ ${site.socials.map((social) => `${social.label}: ${social.url}`).join("\n")}
 ## Pages
 
 - [Home](${base}/): ${content.home.seo.aiSummary || content.home.seo.description}
+- [Shows](${base}/shows): ${content.showsPage.seo.aiSummary || content.showsPage.seo.description}
 - [News](${base}/news): ${content.news.seo.aiSummary || content.news.seo.description}
 - [About Us](${base}/about): ${about.seo.aiSummary || about.seo.description}
 - [Shop](${base}/shop): ${shop.seo.aiSummary || shop.seo.description}
@@ -46,6 +49,34 @@ ${clamp(stripMarkdown(about.story), 1800)}
 ## FAQ
 
 ${faq}
+
+## Upcoming shows
+
+${
+  upcoming.length
+    ? upcoming
+        .map(
+          (show) =>
+            `- [${show.title}](${base}/shows/${show.slug}) — ${show.date}${
+              timeLine(show) ? `, ${timeLine(show)}` : ""
+            } — ${venueLine(show) || "venue to be announced"}${
+              show.price ? ` — ${show.price}` : ""
+            }${show.ticketUrl ? ` — tickets: ${show.ticketUrl}` : ""}${
+              show.lineup.length
+                ? ` — lineup: ${show.lineup.map((person) => person.name).filter(Boolean).join(", ")}`
+                : ""
+            }`
+        )
+        .join("\n")
+    : "No shows are currently announced."
+}
+
+## Past shows
+
+${past
+  .slice(0, 20)
+  .map((show) => `- [${show.title}](${base}/shows/${show.slug}) — ${show.date} — ${venueLine(show)}`)
+  .join("\n")}
 
 ## News archive
 
