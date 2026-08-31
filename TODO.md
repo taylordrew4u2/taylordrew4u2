@@ -139,23 +139,30 @@ tile still opens the real Instagram post either way.
 
 **Fastest way — pull everything from @pinsandneedlescomedy automatically:**
 
-**Reels** tab → **Instagram sync** panel at the top. It needs an access token
-from Instagram first — that step is unavoidably yours to do, since only the
-account owner can approve API access:
+**Reels** tab → **Instagram sync** panel at the top. It logs in through a real
+Instagram screen — no token to copy anywhere — but getting there needs a
+one-time setup only the account owner can do, since Meta requires the account
+owner to approve API access for anyone:
 
 1. Switch the Instagram account to Professional (Business or Creator) —
    free, in the Instagram app under **Settings → Account type**.
-2. Create a free app at **developers.facebook.com** and add the Instagram
-   product to it, then generate a long-lived access token for the account.
-3. Paste that token into the **Access token** field — it saves itself.
-4. Click **Sync all reels from Instagram**. It downloads every reel's video
+2. Create a free app at **developers.facebook.com**, add the Instagram
+   product to it, and set its OAuth redirect URI to
+   `https://pinsandneedlescomedy.com/api/admin/instagram/callback`.
+3. On that same app, add the Instagram account as a tester — the app can
+   stay in Development mode, no review needed for just your own account.
+4. Copy the app's **App ID** and **App Secret** into Vercel → **Settings →
+   Environment Variables** as `INSTAGRAM_APP_ID` and `INSTAGRAM_APP_SECRET`,
+   then redeploy.
+5. Back in `/admin` → **Reels**, click **Log in with Instagram**, approve on
+   Instagram's own screen, and you're back here connected.
+6. Click **Sync all reels from Instagram**. It downloads every reel's video
    and keeps going until it's pulled the whole account, then stops.
 
-The token lasts about 60 days; every sync refreshes it automatically, so this
-is a one-time setup as long as you sync at least once every couple of months.
-Click the button again any time to pick up new posts — it only ever adds
-reels it hasn't seen yet, so a manual reorder or a hidden reel is never
-touched.
+The connection lasts about 60 days; every sync refreshes it automatically, so
+step 4 onward only ever needs doing once. Click the sync button again any
+time to pick up new posts — it only ever adds reels it hasn't seen yet, so a
+manual reorder or a hidden reel is never touched.
 
 **Or add one manually** — useful for a single video that isn't on the
 Instagram account at all:

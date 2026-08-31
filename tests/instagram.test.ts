@@ -1,7 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  buildAuthorizeUrl,
   buildReelFromMedia,
+  exchangeCodeForToken,
+  exchangeForLongLivedToken,
   isReel,
   mergeReels,
   pickNewItems,
@@ -214,4 +217,80 @@ test("runInstagramSync: skips a media item with no downloadable video", async ()
   const result = await runInstagramSync({ reels: [], cursor: "", caughtUp: true }, "token", deps);
   assert.equal(result.addedCount, 0);
   assert.equal(result.reels.length, 0);
+});
+
+// --- OAuth: real "Log in with Instagram" flow ---
+
+test("buildAuthorizeUrl points at Instagram with the right params", () => {
+  const url = new URL(buildAuthorizeUrl("app123", "https://example.com/cb", "state-abc"));
+  assert.equal(url.origin + url.pathname, "https://www.instagram.com/oauth/authorize");
+  assert.equal(url.searchParams.get("client_id"), "app123");
+  assert.equal(url.searchParams.get("redirect_uri"), "https://example.com/cb");
+  assert.equal(url.searchParams.get("response_type"), "code");
+  assert.equal(url.searchParams.get("state"), "state-abc");
+  assert.ok(url.searchParams.get("scope"));
+});
+
+test("exchangeCodeForToken reads the token from the modern wrapped response shape", async () => {
+  const originalFetch = global.fetch;
+  global.fetch = (async () =>
+    new Response(JSON.stringify({ data: [{ access_token: "short-lived-token" }] }), { status: 200 })) as typeof fetch;
+  try {
+    const result = await exchangeCodeForToken({
+      code: "abc",
+      redirectUri: "https://example.com/cb",
+      appId: "app123",
+      appSecret: "secret",
+    });
+    assert.equal(result.accessToken, "short-lived-token");
+  } finally {
+    global.fetch = originalFetch;
+  }
+});
+
+test("exchangeCodeForToken also accepts the flat legacy response shape", async () => {
+  const originalFetch = global.fetch;
+  global.fetch = (async () =>
+    new Response(JSON.stringify({ access_token: "short-lived-token" }), { status: 200 })) as typeof fetch;
+  try {
+    const result = await exchangeCodeForToken({
+      code: "abc",
+      redirectUri: "https://example.com/cb",
+      appId: "app123",
+      appSecret: "secret",
+    });
+    assert.equal(result.accessToken, "short-lived-token");
+  } finally {
+    global.fetch = originalFetch;
+  }
+});
+
+test("exchangeCodeForToken raises a clear error on an Instagram-side failure", async () => {
+  const originalFetch = global.fetch;
+  global.fetch = (async () =>
+    new Response("invalid_grant", { status: 400 })) as typeof fetch;
+  try {
+    await assert.rejects(
+      () => exchangeCodeForToken({ code: "bad", redirectUri: "https://example.com/cb", appId: "a", appSecret: "s" }),
+      /declined/
+    );
+  } finally {
+    global.fetch = originalFetch;
+  }
+});
+
+test("exchangeForLongLivedToken converts expires_in seconds into an ISO timestamp", async () => {
+  const originalFetch = global.fetch;
+  global.fetch = (async () =>
+    new Response(JSON.stringify({ access_token: "long-lived-token", expires_in: 5184000 }), { status: 200 })) as typeof fetch;
+  try {
+    const before = Date.now();
+    const result = await exchangeForLongLivedToken("short-lived-token", "secret");
+    assert.equal(result.accessToken, "long-lived-token");
+    const expiry = Date.parse(result.tokenExpiresAt);
+    assert.ok(expiry > before, "expiry should be in the future");
+    assert.ok(expiry <= before + 5184000 * 1000 + 5000, "expiry should match expires_in");
+  } finally {
+    global.fetch = originalFetch;
+  }
 });

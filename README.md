@@ -196,15 +196,25 @@ opens the real Instagram post.
 
 ### Automatic — pull everything from the Instagram account
 
-**Admin → Reels → Instagram sync**. Needs a long-lived access token from
-Instagram first, which only the account owner can generate (switch to a
-Professional account, create a free app at developers.facebook.com, add the
-Instagram product, generate the token). Paste it in and click **Sync all reels
-from Instagram** — it downloads every reel's video and poster frame, keeps
-paging through the account's full history the first time, and on every later
-click only pulls whatever is new since the last sync. The token is refreshed
-automatically, so this is a one-time setup as long as a sync runs at least
-once every couple of months.
+**Admin → Reels → Instagram sync → Log in with Instagram.** A real Instagram
+login and approval screen — nothing to copy or paste. One-time setup first,
+only doable by the account owner (Meta requires it for any app):
+
+1. Switch the account to Professional (Business or Creator), free in the app.
+2. Create a free app at developers.facebook.com, add the Instagram product,
+   and set its OAuth redirect URI to `<your site>/api/admin/instagram/callback`.
+3. Add the Instagram account as a tester on that app — Development mode is
+   enough, no App Review needed for a single account.
+4. Put the app's **App ID** and **App Secret** in this deployment's env vars
+   as `INSTAGRAM_APP_ID` / `INSTAGRAM_APP_SECRET` (see `.env.example`), then
+   redeploy.
+
+After that, clicking **Log in with Instagram** in `/admin` is the whole flow.
+Then **Sync all reels from Instagram** downloads every reel's video and
+poster frame, paging through the full account history the first time and
+only pulling what's new on every later click. The connection refreshes
+itself automatically, so steps 1–4 are one-time as long as a sync runs at
+least once every couple of months.
 
 Re-syncing never touches a reel already on the site — a manual reorder, an
 edited caption, or one you've hidden survives every future sync.
