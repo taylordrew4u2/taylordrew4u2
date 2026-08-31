@@ -27,6 +27,26 @@ export type Reel = {
   alt: string;
   order: number;
   published: boolean;
+  /** When Instagram published it, ISO timestamp. Empty for a manually added reel. */
+  igTimestamp: string;
+  /** The Instagram media id it was synced from. Empty for a manually added reel. */
+  igMediaId: string;
+};
+
+export type InstagramSync = {
+  /** A long-lived Instagram access token, pasted in by the admin. Never sent to the browser. */
+  accessToken: string;
+  /** ISO timestamp; the token is refreshed automatically once this gets close. */
+  tokenExpiresAt: string;
+  /** Graph API pagination cursor to resume from. Empty means "start from the newest post". */
+  cursor: string;
+  /** True once a walk has reached either a known post or the end of the account's history. */
+  caughtUp: boolean;
+  lastSyncedAt: string;
+  lastSyncCount: number;
+  /** Items still waiting on the current page as of the last sync — 0 once that page is drained. */
+  remaining: number;
+  lastError: string;
 };
 
 export type ReelGridSettings = {
@@ -209,4 +229,5 @@ export type Content = {
   blogSettings: BlogSettings;
   posts: Post[];
   reels: Reel[];
+  instagram: InstagramSync;
 };

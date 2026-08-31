@@ -377,4 +377,15 @@ Standard microphone and sound system, basic stage lighting, minimal setup and br
   posts: SEED_POSTS.map(post),
 
   reels: [],
+
+  instagram: {
+    accessToken: "",
+    tokenExpiresAt: "",
+    cursor: "",
+    caughtUp: true,
+    lastSyncedAt: "",
+    lastSyncCount: 0,
+    remaining: 0,
+    lastError: "",
+  },
 };

@@ -75,6 +75,20 @@ export async function getContent(): Promise<Content> {
   return (await load()).value;
 }
 
+/**
+ * Same as getContent(), but throws instead of silently falling back to the
+ * defaults when storage cannot actually be read. Anything that is about to
+ * write a full snapshot on top of "current content" — like the Instagram
+ * sync route — must start from this, not getContent(): reading the defaults
+ * during a transient storage hiccup and saving on top of them would wipe
+ * every real field on the site.
+ */
+export async function getContentStrict(): Promise<Content> {
+  const { value, readable } = await load();
+  if (!readable) throw new Error("Storage is not readable right now");
+  return value;
+}
+
 export async function saveContent(next: Content): Promise<Content> {
   const value: Content = { ...next, updatedAt: new Date().toISOString() };
   const json = JSON.stringify(value, null, 2);

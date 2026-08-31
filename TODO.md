@@ -132,21 +132,40 @@ padding, alignment, case, colour and overlay darkness.
 **Reels** tab. Empty right now — both home-page grids show a "Watch on
 Instagram" band until you add some.
 
-**Read this first:** each tile plays a video file you upload, not an Instagram
-embed. Instagram's embed won't autoplay silently and drags in its own header
-and caption, which wrecks the edge-to-edge grid. Clicking a tile still opens
-the real Instagram post.
+**Read this first:** each tile plays a video file hosted on this site, not an
+Instagram embed. Instagram's own embed won't autoplay silently and drags in
+its own header and caption, which wrecks the edge-to-edge grid. Clicking a
+tile still opens the real Instagram post either way.
 
-Per reel:
+**Fastest way — pull everything from @pinsandneedlescomedy automatically:**
+
+**Reels** tab → **Instagram sync** panel at the top. It needs an access token
+from Instagram first — that step is unavoidably yours to do, since only the
+account owner can approve API access:
+
+1. Switch the Instagram account to Professional (Business or Creator) —
+   free, in the Instagram app under **Settings → Account type**.
+2. Create a free app at **developers.facebook.com** and add the Instagram
+   product to it, then generate a long-lived access token for the account.
+3. Paste that token into the **Access token** field — it saves itself.
+4. Click **Sync all reels from Instagram**. It downloads every reel's video
+   and keeps going until it's pulled the whole account, then stops.
+
+The token lasts about 60 days; every sync refreshes it automatically, so this
+is a one-time setup as long as you sync at least once every couple of months.
+Click the button again any time to pick up new posts — it only ever adds
+reels it hasn't seen yet, so a manual reorder or a hidden reel is never
+touched.
+
+**Or add one manually** — useful for a single video that isn't on the
+Instagram account at all:
 
 1. **Paste the Instagram permalink** (`https://www.instagram.com/reel/...`).
-   Bulk-paste a whole list at once in the box at the top.
+   Bulk-paste a whole list at once in the box further down the tab.
 2. **Upload the video** — your original export, or the reel downloaded from
    Instagram.
 3. **Poster frame** (optional) — the still shown while the video loads.
 4. **Alt text** — one sentence on what's in it.
-
-Start with 8–12. The bottom grid keeps loading as you scroll, so more is better.
 
 ---
 

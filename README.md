@@ -133,7 +133,7 @@ flight.
 | Tab | What you can change |
 | --- | --- |
 | **Home** | Hero logo and its size, panel height, the site name with its font, size and letter spacing, the nav word row, both reel grids, an optional background video |
-| **Reels** | Per reel: Instagram link, video file, poster frame, caption, alt text, order, published. Bulk-paste links to add many at once |
+| **Reels** | One click to sync every reel from the Instagram account (needs an access token, generated once), or add one manually: link, video file, poster frame, caption, alt text, order, published |
 | **News** | Every post — and the display settings that apply to *all* posts at once |
 | **Shop** | Your Shopify embed code and a storefront link |
 | **About Us** | The story, the logo gallery with per-tile sizing, and one card per producer |
@@ -191,10 +191,25 @@ BreadcrumbList and FAQPage.
 
 Instagram's own embed will not autoplay silently, and it drags in its own header
 and caption chrome — neither of which fits an edge-to-edge grid. So each tile
-plays a **video file you upload**, muted and looping, and clicking it opens the
-real Instagram post.
+plays a **video file hosted on this site**, muted and looping, and clicking it
+opens the real Instagram post.
 
-For each reel:
+### Automatic — pull everything from the Instagram account
+
+**Admin → Reels → Instagram sync**. Needs a long-lived access token from
+Instagram first, which only the account owner can generate (switch to a
+Professional account, create a free app at developers.facebook.com, add the
+Instagram product, generate the token). Paste it in and click **Sync all reels
+from Instagram** — it downloads every reel's video and poster frame, keeps
+paging through the account's full history the first time, and on every later
+click only pulls whatever is new since the last sync. The token is refreshed
+automatically, so this is a one-time setup as long as a sync runs at least
+once every couple of months.
+
+Re-syncing never touches a reel already on the site — a manual reorder, an
+edited caption, or one you've hidden survives every future sync.
+
+### Manual — for a one-off video that isn't on the Instagram account
 
 1. Paste the Instagram permalink — that's where a click sends people.
 2. Upload the video. Your original export works; so does the reel downloaded
@@ -205,7 +220,7 @@ For each reel:
 Tiles far off screen pause themselves, so the infinite grid at the bottom of the
 home page stays smooth however long it gets.
 
-Until you add reels, both grids collapse to a single "Watch on Instagram" band.
+Until reels exist, both grids collapse to a single "Watch on Instagram" band.
 
 ---
 
