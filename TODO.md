@@ -49,17 +49,48 @@ again. Skipping it logs you out of `/admin` on every deploy.
 
 ---
 
-### ⚠️ ☐ 3. Add the Blob store — nothing saves without this
+### ⚠️ ☐ 3. Set up storage — nothing saves without this
 
-Same project → the **Storage** tab at the top → **Create Database** → **Blob**
-→ **Continue** → name it anything → **Create** → **Connect to Project**.
-
-Vercel's servers have a read-only disk. Without a Blob store, `/admin` looks
+Vercel's servers have a read-only disk. Without a content store, `/admin` looks
 completely normal — loads, logs you in, lets you type — and then throws away
 everything you write. This is where your text and every uploaded image actually
 lives.
 
-Free, and this site won't come near the limit.
+Pick **one** of these two. Both are free.
+
+#### Option A — GitHub (free, no card, keeps every version)
+
+Nothing new to sign up for, and every save becomes a commit you can look back
+through.
+
+1. **github.com/new** → name it `pins-needles-content` → tick **Private** →
+   tick **Add a README file** → **Create repository**.
+   ⚠️ It has to be a *different* repo from this site's, or every autosave
+   would kick off a new deployment. Keep it **private** — the file it stores
+   holds your Instagram token.
+2. **github.com/settings/tokens?type=beta** → **Generate new token**.
+   - Token name: anything, e.g. `pins-needles-site`
+   - Expiration: **No expiration** (or set a reminder to replace it)
+   - Repository access: **Only select repositories** → pick
+     `pins-needles-content`
+   - Permissions → **Repository permissions** → **Contents** → **Read and
+     write**
+   - **Generate token**, then copy it — GitHub shows it once.
+3. In Vercel → **Settings** → **Environment Variables**, add two, all three
+   boxes ticked:
+
+   | Key | Value |
+   | --- | --- |
+   | `CONTENT_GITHUB_TOKEN` | the token you just copied |
+   | `CONTENT_GITHUB_REPO` | `your-username/pins-needles-content` |
+
+#### Option B — Vercel Blob
+
+Same project → the **Storage** tab at the top → **Create Database** → **Blob**
+→ **Continue** → name it anything → **Create** → **Connect to Project**.
+
+Simpler if it works for your account; Vercel sometimes asks for a payment
+method before it will create one, which is why Option A exists.
 
 ---
 
@@ -78,9 +109,13 @@ Wait for the green **Ready**.
 
 1. Open the Vercel URL with `/admin` on the end.
 2. Log in.
-3. **Is there an orange banner** saying saving isn't set up?
-   - **Yes** → the Blob store isn't connected. Redo step 3, then step 4.
-   - **No** → good.
+3. **Is there an orange banner** about saving? Read it — it names the problem.
+   - "no content store" → step 3 was skipped or the variables are missing.
+   - "could not be read" → the store is configured but not answering. For
+     GitHub: check the token has **Contents: Read and write** on that exact
+     repo and hasn't expired. For Blob: check the store is still connected.
+   - Fix it, redo step 4, and check again.
+   - **No banner** → good.
 4. Change any text field. The header should flash **Saving…** then **Saved**.
 5. Refresh. Your change should still be there.
 
@@ -300,8 +335,8 @@ brief for AI answer engines. Nothing to do.
 
 | What you see | What it is |
 | --- | --- |
-| Orange banner in `/admin` | No Blob store. Step 3, then 4. |
-| `Save failed — retrying` | Storage unreachable. It retries itself; if it sticks, check the Blob store is still connected. |
+| Orange banner in `/admin` | Read it — it says whether no store is configured, or one is configured but not answering. Step 3, then 4. |
+| `Save failed — retrying` | Storage unreachable. It retries itself; if it sticks, check the store from step 3 — a GitHub token that expired or lost its Contents permission does this. |
 | Logged out after every deploy | `ADMIN_SECRET` not set. Step 2. |
 | `noindex` in the page source | Correct on the Vercel URL. Step 6. |
 | Reels show "Watch on Instagram" | No reels yet. Step 8. |

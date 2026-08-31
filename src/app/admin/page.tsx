@@ -13,5 +13,5 @@ export const metadata: Metadata = {
 
 export default async function AdminPage() {
   if (!(await isAuthed())) return <LoginForm />;
-  return <AdminApp initial={await getContent()} warning={storageWarning()} />;
+  return <AdminApp initial={await getContent()} warning={await storageWarning()} />;
 }
