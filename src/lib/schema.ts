@@ -1,5 +1,6 @@
-import type { Content, Post, Seo } from "./types";
+import type { Content, Post, Seo, Show } from "./types";
 import { absoluteUrl, stripMarkdown, clamp } from "./seo";
+import { eventStatusUrl, isoDateTime, showSummary, splitShows } from "./shows";
 
 export function organizationSchema(content: Content) {
   const { site, about } = content;
@@ -107,5 +108,101 @@ export function blogSchema(content: Content) {
         url: `${site.url}/news/${post.slug}`,
         datePublished: post.date,
       })),
+  };
+}
+
+/**
+ * Event JSON-LD for one show. This is the highest-value structured data on
+ * the site: it is what puts a date into Google's event results and what an
+ * answer engine reads when someone asks when the next show is.
+ */
+export function eventSchema(content: Content, show: Show) {
+  const { site } = content;
+  const base = site.url.replace(/\/+$/, "");
+  const url = `${base}/shows/${show.slug}`;
+
+  const performers = show.lineup
+    .filter((person) => person.name.trim())
+    .map((person) => ({
+      "@type": "Person",
+      name: person.name,
+      ...(person.url ? { sameAs: person.url } : {}),
+      ...(person.role ? { jobTitle: person.role } : {}),
+    }));
+
+  const address = {
+    "@type": "PostalAddress",
+    ...(show.address ? { streetAddress: show.address } : {}),
+    ...(show.city ? { addressLocality: show.city } : {}),
+    ...(show.region ? { addressRegion: show.region } : {}),
+    ...(show.postalCode ? { postalCode: show.postalCode } : {}),
+    addressCountry: show.country || "US",
+  };
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "ComedyEvent",
+    "@id": `${url}#event`,
+    name: show.title,
+    url,
+    startDate: isoDateTime(show.date, show.startTime || show.doorsTime),
+    ...(show.endTime ? { endDate: isoDateTime(show.date, show.endTime) } : {}),
+    eventStatus: eventStatusUrl(show.status),
+    eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+    description: clamp(
+      show.seo.aiSummary || show.seo.description || stripMarkdown(show.description) || showSummary(show),
+      600
+    ),
+    image: [absoluteUrl(base, show.posterUrl || site.logoUrl)],
+    ...(show.venueName || show.address
+      ? {
+          location: {
+            "@type": "Place",
+            name: show.venueName || show.city,
+            address,
+            ...(show.venueUrl ? { url: show.venueUrl } : {}),
+            ...(show.mapUrl ? { hasMap: show.mapUrl } : {}),
+          },
+        }
+      : {}),
+    ...(performers.length ? { performer: performers } : {}),
+    organizer: { "@id": `${base}#organization` },
+    ...(show.ticketUrl
+      ? {
+          offers: {
+            "@type": "Offer",
+            url: show.ticketUrl,
+            ...(show.price ? { price: show.price.replace(/[^0-9.]/g, "") || show.price } : {}),
+            priceCurrency: show.currency || "USD",
+            availability:
+              show.status === "sold-out"
+                ? "https://schema.org/SoldOut"
+                : "https://schema.org/InStock",
+          },
+        }
+      : {}),
+    ...(show.ageRestriction ? { typicalAgeRange: show.ageRestriction } : {}),
+    isAccessibleForFree: /free|\$0\b/i.test(show.price),
+  };
+}
+
+/** The /shows index as an ordered list of events, upcoming first. */
+export function showsListSchema(content: Content, today: string) {
+  const base = content.site.url.replace(/\/+$/, "");
+  const { upcoming, past } = splitShows(content.shows, today);
+  const listed = [...upcoming, ...past].slice(0, 30);
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "@id": `${base}/shows#shows`,
+    name: `${content.site.name} shows`,
+    numberOfItems: listed.length,
+    itemListElement: listed.map((show, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      url: `${base}/shows/${show.slug}`,
+      name: show.title,
+    })),
   };
 }
