@@ -38,20 +38,20 @@ export async function generateMetadata(): Promise<Metadata> {
       canonical: site.seo.canonical || base,
       types: { "application/rss+xml": `${base}/rss.xml` },
     },
-    icons: { icon: site.faviconUrl || "/brand/icon.png", apple: site.faviconUrl || "/brand/icon.png" },
+    icons: { icon: site.faviconUrl || "/brand/icon.svg", apple: site.faviconUrl || "/brand/icon.svg" },
     openGraph: {
       type: "website",
       siteName: site.name,
       title: site.seo.title || site.name,
       description: site.seo.description,
       url: site.seo.canonical || base,
-      images: [absoluteUrl(base, site.seo.ogImage || "/brand/icon.png")],
+      images: [absoluteUrl(base, site.seo.ogImage || "/brand/icon.svg")],
     },
     twitter: {
       card: "summary_large_image",
       title: site.seo.title || site.name,
       description: site.seo.description,
-      images: [absoluteUrl(base, site.seo.ogImage || "/brand/icon.png")],
+      images: [absoluteUrl(base, site.seo.ogImage || "/brand/icon.svg")],
     },
     robots: indexable
       ? { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 }

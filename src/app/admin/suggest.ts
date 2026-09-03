@@ -36,7 +36,7 @@ export function suggestFor(
   const site = content.site;
   const brand = site.name || "Pins & Needles Comedy";
   const root = base(content);
-  const fallbackImage = site.seo.ogImage || site.logoUrl || "/brand/icon.png";
+  const fallbackImage = site.seo.ogImage || site.logoUrl || "/brand/icon.svg";
 
   const make = (
     title: string,
