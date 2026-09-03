@@ -201,10 +201,32 @@ function StagePanel({ enabled }: { enabled: boolean }) {
   const [list, setList] = useState<Submission[] | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  // Whether the forwarded-text mailbox is set up, and whether it is answering.
+  const [texting, setTexting] = useState<{ on: boolean; error: string }>({ on: false, error: "" });
   const [drawn, setDrawn] = useState<Submission[]>([]);
   const [showPile, setShowPile] = useState(false);
 
   const load = useCallback(async () => {
+    // Check the forwarded-text mailbox on the way past. This panel is only
+    // open during a show, which is exactly when texts need collecting, so it
+    // stands in for a scheduler — and a scheduler is the part that costs
+    // money. A mailbox that is not set up answers instantly and says so.
+    try {
+      const pull = await fetch("/api/admin/decisions/ingest", {
+        method: "POST",
+        cache: "no-store",
+      });
+      const result = await pull.json().catch(() => ({}));
+      setTexting(
+        result?.configured
+          ? { on: true, error: result.ok ? "" : String(result.error || "Mailbox unreachable") }
+          : { on: false, error: "" }
+      );
+    } catch {
+      // A failed pull must never stop the pile from loading below.
+      setTexting({ on: true, error: "Mailbox unreachable" });
+    }
+
     try {
       const response = await fetch("/api/admin/decisions", { cache: "no-store" });
       const data = await response.json().catch(() => ({}));
@@ -272,6 +294,17 @@ function StagePanel({ enabled }: { enabled: boolean }) {
     >
       {error ? (
         <p className="rounded-md border border-red-900/60 bg-red-950/40 px-3 py-2 text-[12px] text-red-300">{error}</p>
+      ) : null}
+      {texting.on ? (
+        texting.error ? (
+          <p className="rounded-md border border-amber-900/60 bg-amber-950/40 px-3 py-2 text-[12px] text-amber-300">
+            Texts aren&apos;t coming through: {texting.error}. The form still works.
+          </p>
+        ) : (
+          <p className="text-[12px] text-neutral-500">
+            Collecting texts from the forwarding mailbox as well as the form.
+          </p>
+        )
       ) : null}
 
       <div className="flex flex-wrap items-end justify-between gap-4">
