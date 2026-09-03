@@ -46,13 +46,26 @@ const GITHUB_CONTENT_PATH = "content/content.json";
 /** Blob sha of the content file as last read, so writes are not blind. */
 let githubSha: string | null = null;
 
-function requireGithub() {
+export function requireGithub() {
   if (!github) {
     throw new Error(
       "The GitHub content store is selected but CONTENT_GITHUB_TOKEN / CONTENT_GITHUB_REPO are not set."
     );
   }
   return github;
+}
+
+/**
+ * Fill in fields that were added to list items after content was first saved.
+ *
+ * merge() handles new top-level and nested object keys, but arrays replace
+ * wholesale, so a Show saved before `series` existed comes back without it.
+ */
+function normalize(content: Content): Content {
+  return {
+    ...content,
+    shows: content.shows.map((show) => ({ ...show, series: show.series ?? "" })),
+  };
 }
 
 /** Short-lived cache so one page render does not re-read storage per section. */
@@ -102,7 +115,7 @@ async function load(): Promise<{ value: Content; readable: boolean }> {
     return { value: defaultContent, readable: false };
   }
 
-  const value = stored ? merge(defaultContent, stored) : defaultContent;
+  const value = normalize(stored ? merge(defaultContent, stored) : defaultContent);
   cache = { value, at: Date.now() };
   return { value, readable: true };
 }

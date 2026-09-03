@@ -22,6 +22,45 @@ export function isUpcoming(show: Show, today: string): boolean {
 }
 
 /**
+ * Minutes east of UTC in New York at a given instant — -240 on EDT, -300 on
+ * EST. Read from the runtime's own timezone data, so the DST changeover needs
+ * no maintenance here.
+ */
+function nyOffsetMinutes(at: Date): number {
+  const formatted = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    timeZoneName: "longOffset",
+  }).format(at);
+  const match = /GMT([+-])(\d{2}):(\d{2})/.exec(formatted);
+  if (!match) return 0;
+  return (match[1] === "-" ? -1 : 1) * (Number(match[2]) * 60 + Number(match[3]));
+}
+
+/**
+ * A wall-clock date and time in New York ("2026-09-03", "21:00") as a real
+ * instant. Returns null when either half is missing or malformed.
+ *
+ * The offset depends on the instant we are trying to find, so this guesses
+ * once from the naive value and then checks its work — which is what makes
+ * 1:30 AM on a changeover night land on the right side of the jump.
+ */
+export function nyInstant(date: string, time: string): Date | null {
+  const day = /^(\d{4})-(\d{2})-(\d{2})$/.exec((date || "").trim());
+  const clock = /^(\d{1,2}):(\d{2})$/.exec((time || "").trim());
+  if (!day || !clock) return null;
+
+  const hours = Number(clock[1]);
+  const minutes = Number(clock[2]);
+  if (hours > 23 || minutes > 59) return null;
+
+  const naive = Date.UTC(Number(day[1]), Number(day[2]) - 1, Number(day[3]), hours, minutes);
+  const first = nyOffsetMinutes(new Date(naive));
+  const corrected = new Date(naive - first * 60_000);
+  const second = nyOffsetMinutes(corrected);
+  return second === first ? corrected : new Date(naive - second * 60_000);
+}
+
+/**
  * Published shows split into the two lists the page renders: what is coming
  * (soonest first — the next show is what a visitor is here for) and what has
  * already happened (most recent first, as an archive).

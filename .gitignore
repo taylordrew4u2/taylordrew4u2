@@ -11,3 +11,4 @@ next-env.d.ts
 /data/content.json
 /public/uploads/*
 !/public/uploads/.gitkeep
+/data/submissions/

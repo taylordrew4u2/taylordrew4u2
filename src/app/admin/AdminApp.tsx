@@ -9,6 +9,7 @@ import HomeTab from "./tabs/HomeTab";
 import ReelsTab from "./tabs/ReelsTab";
 import NewsTab from "./tabs/NewsTab";
 import ShowsTab from "./tabs/ShowsTab";
+import WeeklyTab from "./tabs/WeeklyTab";
 import ShopTab from "./tabs/ShopTab";
 import AboutTab from "./tabs/AboutTab";
 import ContactTab from "./tabs/ContactTab";
@@ -17,6 +18,7 @@ const TABS = [
   { id: "home", label: "Home" },
   { id: "reels", label: "Reels" },
   { id: "shows", label: "Shows" },
+  { id: "weekly", label: "Bad Decisions" },
   { id: "news", label: "News" },
   { id: "shop", label: "Shop" },
   { id: "about", label: "About Us" },
@@ -39,6 +41,7 @@ function prefillSeo(content: Content): Content {
   next.shop.seo = fillEmpty(next.shop.seo, suggestFor(next, "shop"));
   next.about.seo = fillEmpty(next.about.seo, suggestFor(next, "about"));
   next.contact.seo = fillEmpty(next.contact.seo, suggestFor(next, "contact"));
+  next.weekly.seo = fillEmpty(next.weekly.seo, suggestFor(next, "weekly"));
   next.posts = next.posts.map((post) => ({
     ...post,
     seo: fillEmpty(post.seo, suggestFor(next, "post", post)),
@@ -216,6 +219,7 @@ export default function AdminApp({
         {tab === "home" ? <HomeTab content={content} update={update} /> : null}
         {tab === "reels" ? <ReelsTab content={content} update={update} refresh={refresh} /> : null}
         {tab === "shows" ? <ShowsTab content={content} update={update} /> : null}
+        {tab === "weekly" ? <WeeklyTab content={content} update={update} /> : null}
         {tab === "news" ? <NewsTab content={content} update={update} /> : null}
         {tab === "shop" ? <ShopTab content={content} update={update} /> : null}
         {tab === "about" ? <AboutTab content={content} update={update} /> : null}

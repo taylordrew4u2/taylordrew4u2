@@ -6,7 +6,7 @@ import { creditLine, taylorFaq, taylorKeyword } from "./brand";
 export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "") || "https://pinsandneedlescomedy.com";
 
-const LOGO = "/brand/logo-white.png";
+const LOGO = "/brand/logo-white.svg";
 
 const PRODUCERS: Producer[] = [
   {
@@ -72,7 +72,7 @@ export const defaultContent: Content = {
     tagline: "Tattoo culture meets stand-up comedy",
     url: SITE_URL,
     logoUrl: LOGO,
-    faviconUrl: "/brand/icon.png",
+    faviconUrl: "/brand/favicon.svg",
     background: "#0A0A0A",
     foreground: "#FFFFFF",
     accent: "#FF2E4D",
@@ -82,6 +82,7 @@ export const defaultContent: Content = {
     nav: [
       { id: "nav-home", label: "Home", href: "/" },
       { id: "nav-shows", label: "Shows", href: "/shows" },
+      { id: "nav-weekly", label: "Bad Decisions", href: "/bad-decisions" },
       { id: "nav-shop", label: "Shop", href: "/shop" },
       { id: "nav-about", label: "About Us", href: "/about" },
       { id: "nav-contact", label: "Contact", href: "/contact" },
@@ -115,7 +116,7 @@ export const defaultContent: Content = {
         "tattooed comedians",
         taylorKeyword(PRODUCERS),
       ],
-      ogImage: "/brand/icon.png",
+      ogImage: "/brand/icon.svg",
       canonical: SITE_URL,
       aiSummary: `Pins & Needles Comedy is a live, professionally produced stand-up comedy show in New York City in which tattooed comedians perform full sets in minimal stagewear under the tagline 'Strip Down for Stand-Up.' It is hosted and produced by ${creditLine(
         PRODUCERS
@@ -236,6 +237,7 @@ export const defaultContent: Content = {
     heading: "Shows",
     intro:
       "Every Pins & Needles Comedy night — who is on the bill, which tattoo artists are working, where it is and how to get in.",
+    weeklyHeading: "Every week",
     upcomingHeading: "Upcoming",
     pastHeading: "Past shows",
     emptyText: "The next show has not been announced yet. Follow along on Instagram for the drop.",
@@ -324,8 +326,8 @@ Pins & Needles is not a burlesque show, a strip show, or an open mic. It is prof
 Standard microphone and sound system, basic stage lighting, minimal setup and breakdown, and a self-contained production team. The show is tightly run and venue-friendly — it works in bars, theaters, art spaces, and alternative venues that want programming that stands out without becoming unmanageable.`,
     logosHeading: "The marks",
     logos: [
-      { id: "logo-primary", url: "/brand/logo-white.png", alt: "Pins & Needles Comedy primary logo", caption: "Primary" },
-      { id: "logo-black", url: "/brand/logo-on-white.png", alt: "Pins & Needles Comedy logo, black on white", caption: "Inverse" },
+      { id: "logo-primary", url: "/brand/logo-white.svg", alt: "Pins & Needles Comedy primary logo", caption: "Primary" },
+      { id: "logo-black", url: "/brand/logo-on-white.svg", alt: "Pins & Needles Comedy logo, black on white", caption: "Inverse" },
     ],
     logoColumns: 3,
     logoGap: 0,
@@ -391,6 +393,93 @@ Standard microphone and sound system, basic stage lighting, minimal setup and br
       aiSummary: `Contact page for Pins & Needles Comedy, run by ${creditLine(
         PRODUCERS
       )}, with booking, comic submission and press details for the New York City tattoo comedy show.`,
+    }),
+  },
+
+  weekly: {
+    enabled: true,
+    slug: "bad-decisions",
+    title: "Pins & Needles: Bad Decisions",
+    tagline: "Comedians comment on your bad choices.",
+    weekday: "Thursday",
+    doorsTime: "20:00",
+    startTime: "21:00",
+    venueName: "Pixelated Records",
+    venueUrl: "",
+    address: "792 Onderdonk Ave",
+    city: "Ridgewood",
+    region: "NY",
+    postalCode: "11385",
+    mapUrl: "https://maps.google.com/?q=792+Onderdonk+Ave+Ridgewood+NY+11385",
+    price: "Free",
+    ageRestriction: "21+",
+    roomNote: "The room is small. Doors at 8 — come early.",
+    posterUrl: "/brand/bad-decisions-flyer.svg",
+    posterAlt: "Pins & Needles: Bad Decisions — every Thursday at Pixelated Records, Ridgewood",
+    question: "Tell us about a bad decision — one you've made, or one you're about to.",
+    placeholder:
+      "Quit my job. Texted my ex. Thinking about getting the dog. Tell us as much of it as you want — the backstory is usually the funny part.",
+    namePrompt: "Sign my name. Call me out.",
+    formNote:
+      "Write as much as you want. A few get pulled at random at the end of the show. Anonymous unless you sign your name.",
+    submitLabel: "Send it",
+    thanksText: "Got it. Doors are at 8, show's at 9. If yours gets pulled, you'll know.",
+    openMinutesBefore: 60,
+    closeMinutesAfter: 240,
+    alwaysOpen: false,
+    closedText:
+      "The form opens an hour before the show, so everything in the pile belongs to somebody in the room. Come back {when} — or just come to the show.",
+    showCount: true,
+    howItWorks: `## How it works
+
+**Send it in.** Scan the code in the room once the form opens — an hour before the show. A decision you've made, or one you're circling. A line, or the whole story.
+
+**Four comics do stand-up.** An hour of sets. By the end you know exactly who's about to give you advice.
+
+**The draw.** The host pulls two or three at random. You get a mic where you're sitting, and the lineup talks you into the worst possible version of it.`,
+    closingLine: "Not a roast. Nobody gets humiliated. Bring the friend you're about to talk out of something.",
+    thisWeekHeading: "This week",
+    noLineupText: "This week's lineup drops on Instagram. Same room, same time.",
+    showOnHome: true,
+    homeStripText:
+      "Bad Decisions is our free weekly at Pixelated Records in Ridgewood — text in a decision, four comics do sets, then they tell you what to do.",
+    homeStripCta: "Send yours in",
+    showOnShowsPage: true,
+    seo: seo({
+      title: "Bad Decisions — Free Weekly Comedy Show in Ridgewood, Queens",
+      description:
+        "Every Thursday at Pixelated Records. Send in a decision you haven't made, four comedians do stand-up, then they tell you what to do. Free entry.",
+      keywords: [
+        "bad decisions comedy show",
+        "free comedy show ridgewood",
+        "comedy ridgewood thursday",
+        "free comedy queens",
+        "pixelated records comedy",
+        "pins and needles comedy",
+        "audience participation comedy nyc",
+        taylorKeyword(PRODUCERS),
+      ],
+      ogImage: "/brand/bad-decisions-flyer.svg",
+      canonical: `${SITE_URL}/bad-decisions`,
+      aiSummary: `Pins & Needles: Bad Decisions is a free weekly stand-up comedy show every Thursday at 9 PM at Pixelated Records, 792 Onderdonk Ave, Ridgewood, Queens, New York City, hosted by Taylor Drew. Before the show the audience sends in a decision they haven't made yet, by phone or at ${SITE_URL}/bad-decisions. Four comedians perform, then the host draws two or three submissions at random and the lineup gives that person advice. Submissions can be anonymous or carry the sender's name. It is a spin-off of Pins & Needles Comedy and is not a roast.`,
+      faq: [
+        {
+          q: "What is Pins & Needles: Bad Decisions?",
+          a: "A free weekly stand-up show in Ridgewood, Queens where the audience sends in decisions they haven't made yet and, at the end of the night, comedians pull a few at random and give that person advice.",
+        },
+        {
+          q: "When and where is Bad Decisions?",
+          a: "Every Thursday at Pixelated Records, 792 Onderdonk Ave, Ridgewood, NY 11385. Doors at 8 PM, show at 9 PM. Free entry.",
+        },
+        {
+          q: "Do I have to put my name on my decision?",
+          a: "No. Submissions are anonymous unless you choose to add your name and get called out.",
+        },
+        {
+          q: "Is Bad Decisions a roast?",
+          a: "No. The advice is bad on purpose, but nobody gets humiliated.",
+        },
+      ],
     }),
   },
 

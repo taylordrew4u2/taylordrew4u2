@@ -45,6 +45,7 @@ const show = (partial: Partial<Show>): Show => ({
   photos: [],
   recapSlug: "",
   instagramUrl: "",
+  series: "",
   published: true,
   featured: false,
   seo: emptySeo(),

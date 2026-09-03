@@ -230,14 +230,103 @@ export type Show = {
   /** Slug of the /news post recapping this show, if there is one. */
   recapSlug: string;
   instagramUrl: string;
+  /**
+   * Which recurring show this night belongs to. Empty for a one-off. The
+   * weekly page (/bad-decisions) finds its "this week" lineup by matching
+   * this against its own slug.
+   */
+  series: string;
   published: boolean;
   featured: boolean;
   seo: Seo;
 };
 
+/**
+ * The weekly show and its submission form, at /bad-decisions.
+ *
+ * Deliberately its own page rather than a Show entry: a Show is one night,
+ * and this is a standing Thursday. The weekly's individual nights still live
+ * in `shows` (tagged with `series`) so each one gets a lineup and a page.
+ */
+export type WeeklyPage = {
+  enabled: boolean;
+  /** Matches Show.series. */
+  slug: string;
+  title: string;
+  tagline: string;
+  /** "Every Thursday" — shown in the header and used for the event schedule. */
+  weekday: "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday" | "Sunday";
+  doorsTime: string;
+  startTime: string;
+  venueName: string;
+  venueUrl: string;
+  address: string;
+  city: string;
+  region: string;
+  postalCode: string;
+  mapUrl: string;
+  price: string;
+  ageRestriction: string;
+  roomNote: string;
+  posterUrl: string;
+  posterAlt: string;
+  /** The one question the form asks. */
+  question: string;
+  /** Placeholder inside the decision field. */
+  placeholder: string;
+  /** Label on the "put my name on it" toggle. */
+  namePrompt: string;
+  /** Small print under the form. */
+  formNote: string;
+  submitLabel: string;
+  /** Shown after a successful send. */
+  thanksText: string;
+  /**
+   * The form only opens around the show, so whoever sends a decision is in
+   * the room to hear it read out. Minutes either side of the start time.
+   */
+  openMinutesBefore: number;
+  closeMinutesAfter: number;
+  /** Host override: keep the form open regardless of the clock. */
+  alwaysOpen: boolean;
+  /** Shown in place of the form outside the window. */
+  closedText: string;
+  /** Whether the public page shows how many decisions are in this week. */
+  showCount: boolean;
+  /** Markdown-lite, same as a blog post body. */
+  howItWorks: string;
+  /** One line at the bottom of the page. */
+  closingLine: string;
+  thisWeekHeading: string;
+  /** Shown under "this week" when no night is published yet. */
+  noLineupText: string;
+  /** A one-line strip under the home hero. */
+  showOnHome: boolean;
+  homeStripText: string;
+  homeStripCta: string;
+  /** A strip at the top of /shows. */
+  showOnShowsPage: boolean;
+  seo: Seo;
+};
+
+export type SubmissionStatus = "open" | "drawn" | "archived";
+
+/** One decision someone sent in. Stored one file per submission, never inside content.json. */
+export type Submission = {
+  id: string;
+  decision: string;
+  /** Empty when the sender chose to stay anonymous. */
+  name: string;
+  createdAt: string;
+  status: SubmissionStatus;
+  drawnAt: string;
+};
+
 export type ShowsPage = {
   heading: string;
   intro: string;
+  /** Heading over the standing weekly block at the top of /shows. */
+  weeklyHeading: string;
   upcomingHeading: string;
   pastHeading: string;
   emptyText: string;
@@ -300,6 +389,7 @@ export type Content = {
   shop: ShopPage;
   about: AboutPage;
   contact: ContactPage;
+  weekly: WeeklyPage;
   blogSettings: BlogSettings;
   posts: Post[];
   shows: Show[];

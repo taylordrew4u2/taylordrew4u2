@@ -1,6 +1,7 @@
 import { getContent } from "@/lib/store";
 import { clamp, stripMarkdown } from "@/lib/seo";
 import { nyToday, splitShows, timeLine, venueLine } from "@/lib/shows";
+import { weeklySummary } from "@/lib/decisions";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +11,7 @@ export const dynamic = "force-dynamic";
  */
 export async function GET() {
   const content = await getContent();
-  const { site, about, shop, contact } = content;
+  const { site, about, shop, contact, weekly } = content;
   const { upcoming, past } = splitShows(content.shows, nyToday());
   const base = site.url.replace(/\/+$/, "");
 
@@ -36,7 +37,11 @@ ${site.socials.map((social) => `${social.label}: ${social.url}`).join("\n")}
 ## Pages
 
 - [Home](${base}/): ${content.home.seo.aiSummary || content.home.seo.description}
-- [Shows](${base}/shows): ${content.showsPage.seo.aiSummary || content.showsPage.seo.description}
+- [Shows](${base}/shows): ${content.showsPage.seo.aiSummary || content.showsPage.seo.description}${
+    weekly.enabled
+      ? `\n- [${weekly.title}](${base}/bad-decisions): ${weekly.seo.aiSummary || weekly.seo.description || weeklySummary(weekly)}`
+      : ""
+  }
 - [News](${base}/news): ${content.news.seo.aiSummary || content.news.seo.description}
 - [About Us](${base}/about): ${about.seo.aiSummary || about.seo.description}
 - [Shop](${base}/shop): ${shop.seo.aiSummary || shop.seo.description}
@@ -50,6 +55,14 @@ ${clamp(stripMarkdown(about.story), 1800)}
 
 ${faq}
 
+${
+  weekly.enabled
+    ? `## Weekly show
+
+${weeklySummary(weekly)} Submit a decision at ${base}/bad-decisions.
+`
+    : ""
+}
 ## Upcoming shows
 
 ${

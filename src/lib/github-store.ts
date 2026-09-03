@@ -159,6 +159,50 @@ export async function writeFile(
 }
 
 /**
+ * List the files directly inside one directory. An empty list when the
+ * directory does not exist yet — a fresh site has no submissions folder.
+ */
+export async function listDir(
+  config: GithubConfig,
+  path: string,
+  fetchImpl: Fetcher = fetch
+): Promise<{ name: string; path: string; sha: string }[]> {
+  const url = `${config.api}/repos/${config.owner}/${config.repo}/contents/${safePath(path)}?ref=${encodeURIComponent(config.branch)}`;
+  const response = await fetchImpl(url, {
+    headers: headers(config, "application/vnd.github+json"),
+    cache: "no-store",
+  });
+  if (response.status === 404) return [];
+  if (!response.ok) {
+    throw new Error(`GitHub list failed (${response.status}): ${await response.text()}`);
+  }
+  const entries = (await response.json()) as { name: string; path: string; sha: string; type: string }[];
+  if (!Array.isArray(entries)) return [];
+  return entries.filter((entry) => entry.type === "file").map(({ name, path, sha }) => ({ name, path, sha }));
+}
+
+/** Remove one file. Deleting something already gone is not an error. */
+export async function deleteFile(
+  config: GithubConfig,
+  path: string,
+  message: string,
+  fetchImpl: Fetcher = fetch
+): Promise<void> {
+  const clean = safePath(path);
+  const current = await readFile(config, clean, fetchImpl);
+  if (!current.sha) return;
+  const response = await fetchImpl(`${config.api}/repos/${config.owner}/${config.repo}/contents/${clean}`, {
+    method: "DELETE",
+    headers: { ...headers(config, "application/vnd.github+json"), "Content-Type": "application/json" },
+    body: JSON.stringify({ message, sha: current.sha, branch: config.branch }),
+  });
+  if (response.status === 404) return;
+  if (!response.ok) {
+    throw new Error(`GitHub delete failed (${response.status}): ${await response.text()}`);
+  }
+}
+
+/**
  * Public URL for an upload. It points at this site rather than at GitHub so
  * a private content repo still works; /api/media streams the bytes back and
  * marks them immutable, so the CDN serves them after the first hit.

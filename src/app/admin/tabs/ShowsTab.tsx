@@ -8,6 +8,8 @@ import MediaField from "../MediaField";
 import SeoEditor from "../SeoEditor";
 import { suggestFor } from "../suggest";
 import type { Update } from "../types";
+import { newWeeklyShow } from "@/lib/decisions";
+import { nyToday } from "@/lib/shows";
 
 const ASPECTS = [
   { value: "9:16" as const, label: "9:16 — tall (story / reel shape)" },
@@ -64,6 +66,7 @@ const newShow = (): Show => {
     photos: [],
     recapSlug: "",
     instagramUrl: "",
+    series: "",
     published: false,
     featured: false,
     seo: emptySeo(),
@@ -177,9 +180,27 @@ export default function ShowsTab({ content, update }: { content: Content; update
         title={`Shows (${content.shows.length})`}
         hint="A show moves from Upcoming to Past on its own, the day after it happens. Nothing to switch."
       >
-        <Button tone="primary" onClick={() => update((d) => void d.shows.unshift(newShow()))}>
-          New show
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button tone="primary" onClick={() => update((d) => void d.shows.unshift(newShow()))}>
+            New show
+          </Button>
+          {content.weekly.enabled ? (
+            <Button
+              onClick={() =>
+                update((d) => void d.shows.unshift(newWeeklyShow(d.weekly, nyToday())))
+              }
+            >
+              New {content.weekly.title.replace(/^Pins & Needles:\s*/i, "")} night
+            </Button>
+          ) : null}
+        </div>
+        {content.weekly.enabled ? (
+          <p className="-mt-2 text-[12px] text-neutral-500">
+            The second button fills in next {content.weekly.weekday}&apos;s date, the venue and the
+            times from the Bad Decisions tab — you add the bill and publish. That night then shows
+            up as &quot;this week&quot; on /bad-decisions.
+          </p>
+        ) : null}
 
         {content.shows.map((show, index) => (
           <Card
@@ -545,6 +566,17 @@ export default function ShowsTab({ content, update }: { content: Content; update
                 onChange={(v) => update((d) => void (d.shows[index].instagramUrl = v))}
               />
             </Row>
+
+            <Select
+              label="Part of a weekly"
+              hint="a weekly night is what /bad-decisions shows as this week's lineup"
+              value={show.series || ""}
+              options={[
+                { value: "", label: "No — a one-off show" },
+                { value: content.weekly.slug, label: content.weekly.title },
+              ]}
+              onChange={(v) => update((d) => void (d.shows[index].series = v))}
+            />
 
             <Row>
               <Toggle
