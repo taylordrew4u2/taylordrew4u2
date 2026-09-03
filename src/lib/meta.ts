@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { Seo, SiteSettings } from "./types";
 import { absoluteUrl } from "./seo";
+import { socialImage } from "./assets";
 import { onCanonicalHost } from "./host";
 
 /** Turn one of our editable Seo blocks into Next.js Metadata. */
@@ -11,8 +12,12 @@ export async function toMetadata(
 ): Promise<Metadata> {
   const base = site.url;
   const url = seo.canonical || absoluteUrl(base, path);
-  const image = absoluteUrl(base, seo.ogImage || site.seo.ogImage || site.logoUrl);
   const title = seo.title || site.seo.title || site.name;
+  const image = socialImage(
+    base,
+    absoluteUrl(base, seo.ogImage || site.seo.ogImage || site.logoUrl),
+    path
+  );
   const description = seo.description || site.seo.description;
 
   // A page is indexable only when it is served on the site's real domain.
