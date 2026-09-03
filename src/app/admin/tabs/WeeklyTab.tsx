@@ -201,7 +201,10 @@ function StagePanel({ enabled }: { enabled: boolean }) {
     }
   }, []);
 
+  // Fetching from the server and polling it: the state this sets comes from
+  // outside React, so there is nothing to derive during render.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void load();
     const timer = setInterval(() => void load(), 15_000);
     return () => clearInterval(timer);

@@ -82,7 +82,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en" className={`${archivo.variable} ${inter.variable}`}>
       <head>
-        {/* eslint-disable-next-line react/no-danger */}
         <style dangerouslySetInnerHTML={{ __html: `:root{${themeVars}}` }} />
       </head>
       <body>

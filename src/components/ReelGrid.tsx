@@ -122,7 +122,14 @@ export default function ReelGrid({
   // can be configured independently.
   const scope = `reels-${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
 
-  useEffect(() => setShown(initial), [initial]);
+  // Adjusting state during render, which is React's documented way to reset
+  // on a prop change: an effect would paint the old page size for a frame
+  // first, and cascade a second render to correct it.
+  const [lastInitial, setLastInitial] = useState(initial);
+  if (lastInitial !== initial) {
+    setLastInitial(initial);
+    setShown(initial);
+  }
 
   const loadMore = useCallback(() => {
     setShown((current) => Math.min(current + (settings.pageSize || 8), visibleReels.length));
