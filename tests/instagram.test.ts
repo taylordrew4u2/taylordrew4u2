@@ -51,7 +51,7 @@ test("isReel accepts VIDEO with media_product_type REELS", () => {
 });
 
 test("isReel accepts a plain VIDEO post when media_product_type is absent", () => {
-  const { media_product_type, ...rest } = video("a");
+  const { media_product_type: _dropped, ...rest } = video("a");
   assert.equal(isReel(rest as InstagramMediaItem), true);
 });
 

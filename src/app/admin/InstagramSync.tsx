@@ -21,10 +21,15 @@ function formatWhen(iso: string): string {
 function useOAuthResult() {
   const [result, setResult] = useState<{ status: string; message: string } | null>(null);
 
+  // Reads the OAuth result Instagram put in the query string, then wipes it
+  // from the address bar. It has to be an effect: this component renders on
+  // the server too, where there is no window to read, and a lazy initialiser
+  // would hydrate to a different value.
   useEffect(() => {
     const url = new URL(window.location.href);
     const status = url.searchParams.get("instagram");
     if (!status) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setResult({ status, message: url.searchParams.get("message") || "" });
     url.searchParams.delete("instagram");
     url.searchParams.delete("message");
@@ -135,7 +140,11 @@ export default function InstagramSync({
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <Button tone="primary" onClick={() => { window.location.href = "/api/admin/instagram/authorize"; }}>
+        <Button tone="primary" onClick={() => {
+            // Resolved against the current origin: assigning a bare relative
+            // path is ambiguous, and this one starts an OAuth redirect.
+            window.location.assign(new URL("/api/admin/instagram/authorize", window.location.origin));
+          }}>
           {instagram.accessToken ? "Reconnect Instagram" : "Log in with Instagram"}
         </Button>
         <button

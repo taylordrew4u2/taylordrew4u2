@@ -71,7 +71,16 @@ export default function AdminApp({
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inFlightRef = useRef(false);
   const latestRef = useRef(content);
-  latestRef.current = content;
+  // Kept current in an effect rather than during render: a save is always
+  // kicked off from a timer or an event, so it never needs this before the
+  // commit that set it.
+  useEffect(() => {
+    latestRef.current = content;
+  });
+
+  // The retry below re-enters flush, so it reaches itself through a ref
+  // instead of closing over a binding that does not exist yet.
+  const flushRef = useRef<() => void>(() => {});
 
   const flush = useCallback(async () => {
     if (inFlightRef.current) return;
@@ -93,11 +102,15 @@ export default function AdminApp({
       setSave("error");
       setError(saveError instanceof Error ? saveError.message : "Save failed");
       // Try again shortly — a dropped connection should not lose an edit.
-      timerRef.current = setTimeout(() => void flush(), 4000);
+      timerRef.current = setTimeout(() => flushRef.current(), 4000);
     } finally {
       inFlightRef.current = false;
     }
   }, []);
+
+  useEffect(() => {
+    flushRef.current = () => void flush();
+  }, [flush]);
 
   // Auto-save: no save button anywhere in this admin.
   useEffect(() => {

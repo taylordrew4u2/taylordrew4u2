@@ -37,8 +37,12 @@ export default function Cropper({
 
   const frame = frameSize(aspect);
 
+  // Syncing with an external resource: the object URL has to be created for
+  // this file and revoked when it changes, which is exactly what an effect is
+  // for. There is no render-time equivalent.
   useEffect(() => {
     const url = URL.createObjectURL(file);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSrc(url);
     return () => URL.revokeObjectURL(url);
   }, [file]);
@@ -57,8 +61,11 @@ export default function Cropper({
   );
 
   // Re-centre whenever the zoom or the image changes so the frame stays covered.
+  // The new offset depends on the image's decoded dimensions, which are only
+  // known after it has loaded, so this cannot be derived during render.
   useEffect(() => {
     if (!natural.w) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setOffset((current) =>
       current.x === 0 && current.y === 0
         ? { x: (frame.width - drawn.w) / 2, y: (frame.height - drawn.h) / 2 }
