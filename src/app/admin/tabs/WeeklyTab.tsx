@@ -81,6 +81,21 @@ export default function WeeklyTab({ content, update }: { content: Content; updat
           <Text label="Button text" value={weekly.submitLabel} onChange={set("submitLabel")} />
         </Row>
         <Area label="After they send" rows={2} value={weekly.thanksText} onChange={set("thanksText")} />
+        <Text
+          label="Text-in number"
+          hint="optional — leave blank to hide it. A free Google Voice number works; texts land in your Google Voice inbox."
+          placeholder="(929) 555-0143"
+          value={weekly.smsNumber}
+          onChange={set("smsNumber")}
+        />
+        {weekly.smsNumber ? (
+          <Text
+            label="How the number is offered"
+            hint="{number} is replaced with the number above"
+            value={weekly.smsNote}
+            onChange={set("smsNote")}
+          />
+        ) : null}
         <Toggle
           label="Show how many decisions are in"
           hint="the count climbs on the page during the bar hour"

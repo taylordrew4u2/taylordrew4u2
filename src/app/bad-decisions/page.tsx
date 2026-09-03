@@ -100,6 +100,8 @@ export default async function WeeklyPage() {
           initialCount={initialCount}
           initialOpen={gate.open}
           initialClosedText={closed}
+          smsNumber={weekly.smsNumber}
+          smsNote={weekly.smsNote}
         />
         {weekly.roomNote ? (
           <p className="mt-4 text-[13px] leading-relaxed text-[var(--pnc-muted)]">{weekly.roomNote}</p>

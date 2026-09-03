@@ -427,6 +427,8 @@ Standard microphone and sound system, basic stage lighting, minimal setup and br
     closeMinutesAfter: 240,
     alwaysOpen: false,
     closedText: "Submissions open an hour before the show. The next one is {when}.",
+    smsNumber: "",
+    smsNote: "Not scanning anything? Text it to {number}.",
     showCount: true,
     howItWorks: `## How it works
 

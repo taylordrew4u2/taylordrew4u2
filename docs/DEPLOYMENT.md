@@ -74,7 +74,39 @@ URI to `<NEXT_PUBLIC_SITE_URL>/api/admin/instagram/callback`. Then set
 The token is stored in `content.json` and refreshes itself before its ~60-day
 expiry — which is why the content repository must be private.
 
-## 5. Moving the domain
+## 5. Texting a decision in (optional)
+
+There are two halves to this, and only one of them is free.
+
+### Showing a number — free
+
+Put a number in **Admin → Bad Decisions → Text-in number** and it appears on
+`/bad-decisions` as an alternative to the form, as a tappable `sms:` link.
+Leave it blank and the whole option disappears.
+
+A free [Google Voice](https://voice.google.com) number is enough for this.
+Texts arrive in the Google Voice app, so the host reads them off their own
+phone during the show. They are *not* in the pile the **Draw one** button pulls
+from — the host works from two places.
+
+### Putting texts in the pile — not free
+
+For a text to land in the same pile as the form, so it gets drawn at random
+alongside everything else, the number has to belong to a provider that can
+POST to a webhook. Google Voice cannot; Twilio can, at roughly $1.15/month for
+the number plus a fraction of a cent per message.
+
+If that is ever worth it: buy a number, point its **A message comes in**
+webhook at `<NEXT_PUBLIC_SITE_URL>/api/decisions/sms`, and set
+`TWILIO_AUTH_TOKEN`. The route verifies Twilio's request signature and
+**refuses every message when the token is unset**, so an unconfigured
+deployment cannot have its pile written to by anyone who guesses the URL.
+
+Texted decisions are stored anonymously — the sender's number is never written
+down. They respect the same open/closed window as the form, and a text sent
+outside it gets a reply saying when the door opens.
+
+## 6. Moving the domain
 
 Do this last. Until `NEXT_PUBLIC_SITE_URL` matches the host actually serving
 traffic, the site refuses to let search engines index it — that gate is
