@@ -74,7 +74,48 @@ URI to `<NEXT_PUBLIC_SITE_URL>/api/admin/instagram/callback`. Then set
 The token is stored in `content.json` and refreshes itself before its ~60-day
 expiry — which is why the content repository must be private.
 
-## 5. Moving the domain
+## 5. Texting a decision in (optional, free)
+
+Some people will never scan a QR code. This gets their texts into the same
+pile the host draws from, without paying anyone.
+
+Google Voice is the only way to get a phone number for nothing. It cannot call
+a webhook — but it will forward every text it receives to an email address, so
+the site reads that mailbox instead.
+
+1. **Get a number** at [voice.google.com](https://voice.google.com).
+2. In Voice, **Settings → Messages → Forward messages to email**.
+3. On the receiving Gmail account, turn on 2-step verification and create an
+   **app password** at
+   [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords).
+   A normal account password will not work for IMAP.
+4. Set `INBOX_IMAP_USER` and `INBOX_IMAP_PASSWORD` in Vercel. The host, port
+   and mailbox default to Gmail's.
+5. Put the number in **Admin → Bad Decisions → Text-in number** so it appears
+   on the page.
+
+**When it runs.** The admin's *Tonight* panel checks the mailbox each time it
+polls, which is every fifteen seconds while it is open — the hour of the show,
+and no other time. That is deliberate: a scheduler is the part that costs
+money, since Vercel's hobby plan allows a cron job once a day, which is no use
+to a live show. Keep the panel open and texts appear in the pile beside the
+form submissions.
+
+The panel says whether the mailbox is answering. Mail that does not look like a
+forwarded text is left alone, every message is marked read so nothing is added
+twice, and texts outside the open window are skipped like any other late
+submission. **The sender's number is never stored.**
+
+### The paid alternative
+
+A carrier number that can POST to a webhook removes the mailbox from the
+middle. Twilio charges roughly $1.15/month plus a fraction of a cent per
+message. Point its **A message comes in** webhook at
+`<NEXT_PUBLIC_SITE_URL>/api/decisions/sms` and set `TWILIO_AUTH_TOKEN`. That
+route verifies Twilio's signature and refuses every message while the token is
+unset, so leaving it unconfigured is safe.
+
+## 6. Moving the domain
 
 Do this last. Until `NEXT_PUBLIC_SITE_URL` matches the host actually serving
 traffic, the site refuses to let search engines index it — that gate is

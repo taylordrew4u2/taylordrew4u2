@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { DECISION_MAX, NAME_MAX } from "@/lib/decisions";
+import { formatPhone, smsHref } from "@/lib/sms";
 
 /**
  * The submission form. Built for a phone in a bar: one field, one choice,
@@ -24,6 +25,8 @@ export default function DecisionForm({
   initialCount,
   initialOpen,
   initialClosedText,
+  smsNumber,
+  smsNote,
 }: {
   question: string;
   placeholder: string;
@@ -35,6 +38,8 @@ export default function DecisionForm({
   initialCount: number | null;
   initialOpen: boolean;
   initialClosedText: string;
+  smsNumber: string;
+  smsNote: string;
 }) {
   const [decision, setDecision] = useState("");
   const [named, setNamed] = useState(false);
@@ -90,6 +95,27 @@ export default function DecisionForm({
 
   const remaining = DECISION_MAX - decision.length;
 
+  // Some people will never scan a code. The number is a link so that tapping
+  // it on a phone opens a composed message rather than making them copy it.
+  const texting = smsNumber ? (
+    <p className="text-[13px] leading-relaxed text-[var(--pnc-muted)]">
+      {(smsNote || "Or text it to {number}.").split("{number}").flatMap((part, index) =>
+        index === 0
+          ? [part]
+          : [
+              <a
+                key="number"
+                href={smsHref(smsNumber)}
+                className="whitespace-nowrap underline underline-offset-4 hover:text-[var(--pnc-fg)]"
+              >
+                {formatPhone(smsNumber)}
+              </a>,
+              part,
+            ]
+      )}
+    </p>
+  ) : null;
+
   const counter =
     showCount && count !== null ? (
       <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--pnc-muted)]">
@@ -102,9 +128,10 @@ export default function DecisionForm({
   // panel at the top of the page made a running show look cancelled.
   if (!open) {
     return (
-      <p className="border-l-2 border-[var(--pnc-accent)] pl-4 text-[17px] leading-relaxed">
-        {closedText}
-      </p>
+      <div className="border-l-2 border-[var(--pnc-accent)] pl-4">
+        <p className="text-[17px] leading-relaxed">{closedText}</p>
+        {texting ? <div className="mt-2">{texting}</div> : null}
+      </div>
     );
   }
 
@@ -202,6 +229,7 @@ export default function DecisionForm({
       {formNote ? (
         <p className="mt-4 text-[13px] leading-relaxed text-[var(--pnc-muted)]">{formNote}</p>
       ) : null}
+      {texting ? <div className="mt-2">{texting}</div> : null}
       <div className="mt-3">{counter}</div>
     </form>
   );

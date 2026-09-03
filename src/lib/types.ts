@@ -291,6 +291,13 @@ export type WeeklyPage = {
   alwaysOpen: boolean;
   /** Shown in place of the form outside the window. */
   closedText: string;
+  /**
+   * A number people can text a decision to instead of using the form. Blank
+   * hides the whole option. Inbound texts arrive through /api/decisions/sms.
+   */
+  smsNumber: string;
+  /** The line offering it, with {number} standing in for the number. */
+  smsNote: string;
   /** Whether the public page shows how many decisions are in this week. */
   showCount: boolean;
   /** Markdown-lite, same as a blog post body. */
