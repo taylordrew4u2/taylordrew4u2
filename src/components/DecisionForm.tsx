@@ -60,7 +60,9 @@ export default function DecisionForm({
         // A missed tick is nothing; the next one will land.
       }
     };
-    const timer = setInterval(tick, 20_000);
+    // Half a minute is plenty for a number that only has to feel alive, and
+    // it halves what a full room asks of the store.
+    const timer = setInterval(tick, 30_000);
     return () => clearInterval(timer);
   }, []);
 
@@ -91,7 +93,7 @@ export default function DecisionForm({
   const counter =
     showCount && count !== null ? (
       <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--pnc-muted)]">
-        {count === 0 ? "No decisions in yet. Be first." : `${count} ${count === 1 ? "decision" : "decisions"} in so far`}
+        {count === 0 ? "No decisions in yet. Be first." : `${count} ${count === 1 ? "decision" : "decisions"} in tonight`}
       </p>
     ) : null;
 

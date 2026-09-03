@@ -5,7 +5,7 @@ import PageHeader from "@/components/PageHeader";
 import JsonLd from "@/components/JsonLd";
 import DecisionForm from "@/components/DecisionForm";
 import { getContent } from "@/lib/store";
-import { countOpen } from "@/lib/submissions";
+import { countSince } from "@/lib/submissions";
 import { toMetadata } from "@/lib/meta";
 import { formatDate, renderBody } from "@/lib/render";
 import { breadcrumbSchema, faqSchema, weeklySchema } from "@/lib/schema";
@@ -52,7 +52,7 @@ export default async function WeeklyPage() {
   let initialCount: number | null = null;
   if (weekly.showCount && gate.open) {
     try {
-      initialCount = await countOpen();
+      initialCount = await countSince(gate.opensAt ? new Date(gate.opensAt) : null);
     } catch (error) {
       console.error("[weekly] count failed:", error);
     }

@@ -8,7 +8,7 @@ import {
   readFile as githubRead,
   writeFile as githubWrite,
 } from "./github-store";
-import { sortSubmissions, submissionId } from "./decisions";
+import { countIdsSince, sortSubmissions, submissionId } from "./decisions";
 import type { Submission, SubmissionStatus } from "./types";
 
 /**
@@ -122,8 +122,11 @@ export async function addSubmission(decision: string, name: string): Promise<Sub
   return submission;
 }
 
-/** Every stored submission, newest first, capped at LIST_LIMIT. */
-export async function listSubmissions(): Promise<Submission[]> {
+/**
+ * The ids in the store, oldest first. One directory listing and nothing else —
+ * on the GitHub driver that is a single API call however big the pile is.
+ */
+export async function listSubmissionIds(): Promise<string[]> {
   let ids: string[] = [];
 
   if (driver === "github") {
@@ -146,16 +149,27 @@ export async function listSubmissions(): Promise<Submission[]> {
     }
   }
 
+  return ids.sort();
+}
+
+/** Every stored submission, newest first, capped at LIST_LIMIT. */
+export async function listSubmissions(): Promise<Submission[]> {
   // Newest ids sort last; keep the most recent LIST_LIMIT.
-  const recent = ids.sort().slice(-LIST_LIMIT);
+  const recent = (await listSubmissionIds()).slice(-LIST_LIMIT);
   const loaded = await Promise.all(recent.map((id) => readOne(id)));
   return sortSubmissions(loaded.map((entry) => entry.submission).filter((s): s is Submission => s !== null));
 }
 
-/** How many are waiting to be drawn. Public, so the page can show the count climbing. */
-export async function countOpen(): Promise<number> {
-  const all = await listSubmissions();
-  return all.filter((submission) => submission.status === "open").length;
+/**
+ * How many have come in since `since` — the number the public page shows.
+ *
+ * Deliberately built from the listing alone: the ids carry their own
+ * timestamps, so counting tonight's pile costs one call rather than one call
+ * per submission. The admin, which needs the actual text, still reads
+ * everything — it is one person, once a night, not a room full of phones.
+ */
+export async function countSince(since: Date | null): Promise<number> {
+  return countIdsSince(await listSubmissionIds(), since);
 }
 
 export async function setStatus(id: string, status: SubmissionStatus): Promise<Submission | null> {

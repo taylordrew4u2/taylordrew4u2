@@ -67,9 +67,39 @@ function cleanBody(value: unknown, max: number): string {
     .trim();
 }
 
+/**
+ * The time half of a submission id: YYYYMMDDHHMMSSmmm in UTC, fixed width so
+ * ids sort by age as plain strings. Shared with the counter below, so the two
+ * can never disagree about the format.
+ */
+export const ID_STAMP_LENGTH = 17;
+
+export function idStamp(now: Date): string {
+  return now.toISOString().replace(/[-:.TZ]/g, "").slice(0, ID_STAMP_LENGTH);
+}
+
 /** A sortable id: the timestamp first so a directory listing comes back in order. */
 export function submissionId(now: Date = new Date()): string {
-  return `${now.toISOString().replace(/[-:.TZ]/g, "").slice(0, 17)}-${Math.random().toString(36).slice(2, 8)}`;
+  return `${idStamp(now)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+const ID_SHAPE = new RegExp(`^\\d{${ID_STAMP_LENGTH}}-[a-z0-9]+$`);
+
+/**
+ * How many submissions came in since `since`, read from the ids alone.
+ *
+ * This is what the public count on the page is built from, and why it is a
+ * single directory listing rather than a read of every file: forty phones in
+ * the room polling a number must not turn into forty times five hundred reads
+ * a minute. Opening the files would only tell us which have been drawn, and
+ * the page says "decisions in so far" — a number that shouldn't tick backwards
+ * when the host pulls one out anyway.
+ */
+export function countIdsSince(ids: string[], since: Date | null): number {
+  const floor = since ? idStamp(since) : "";
+  return ids.filter(
+    (id) => ID_SHAPE.test(id) && (!floor || id.slice(0, ID_STAMP_LENGTH) >= floor)
+  ).length;
 }
 
 /** The subset a host needs on stage, most recent first. */

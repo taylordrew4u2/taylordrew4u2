@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { closedMessage, sanitizeSubmission, submissionWindow } from "@/lib/decisions";
 import { getContent } from "@/lib/store";
-import { addSubmission, countOpen } from "@/lib/submissions";
+import { addSubmission, countSince } from "@/lib/submissions";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +23,30 @@ function limited(key: string): boolean {
   hits.set(key, recent);
   if (hits.size > 5000) hits.clear(); // never let it grow without bound
   return false;
+}
+
+/**
+ * The public count, cached for a few seconds.
+ *
+ * The listing behind it is already one call, but a full room polling every
+ * half-minute is still forty of them; this collapses those into one. Keyed by
+ * the window it counts, so a new night never inherits the last one's number,
+ * and dropped whenever a submission lands so the sender sees their own.
+ */
+const COUNT_TTL_MS = 10_000;
+let counted: { key: string; at: number; value: number | null } | null = null;
+
+async function roomCount(since: string): Promise<number | null> {
+  const now = Date.now();
+  if (counted && counted.key === since && now - counted.at < COUNT_TTL_MS) return counted.value;
+  let value: number | null = null;
+  try {
+    value = await countSince(since ? new Date(since) : null);
+  } catch (error) {
+    console.error("[decisions] count failed:", error);
+  }
+  counted = { key: since, at: now, value };
+  return value;
 }
 
 function addressOf(request: Request): string {
@@ -52,12 +76,7 @@ export async function GET() {
   if (!weekly.enabled || !weekly.showCount || !gate.open) {
     return NextResponse.json({ ...state, count: null });
   }
-  try {
-    return NextResponse.json({ ...state, count: await countOpen() });
-  } catch (error) {
-    console.error("[decisions] count failed:", error);
-    return NextResponse.json({ ...state, count: null });
-  }
+  return NextResponse.json({ ...state, count: await roomCount(gate.opensAt) });
 }
 
 export async function POST(request: Request) {
@@ -111,13 +130,8 @@ export async function POST(request: Request) {
     );
   }
 
-  let count: number | null = null;
-  if (weekly.showCount) {
-    try {
-      count = await countOpen();
-    } catch {
-      count = null;
-    }
-  }
+  // The sender should see their own decision in the number.
+  counted = null;
+  const count = weekly.showCount ? await roomCount(gate.opensAt) : null;
   return NextResponse.json({ ok: true, count });
 }
