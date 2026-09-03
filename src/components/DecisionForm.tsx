@@ -164,9 +164,7 @@ export default function DecisionForm({
         <span className="text-[15px] leading-snug">
           {namePrompt}
           <span className="mt-1 block text-[13px] text-[var(--pnc-muted)]">
-            {named
-              ? "Your name gets read out with it."
-              : "Leave this unticked and it stays anonymous."}
+            {named ? "We'll read your name out with it." : "You'll stay anonymous."}
           </span>
         </span>
       </label>

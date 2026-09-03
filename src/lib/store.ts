@@ -3,6 +3,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { defaultContent } from "./defaults";
 import { merge } from "./merge";
+import { healAssetPaths } from "./assets";
 import {
   checkAccess as githubCheckAccess,
   githubConfig,
@@ -56,15 +57,19 @@ export function requireGithub() {
 }
 
 /**
- * Fill in fields that were added to list items after content was first saved.
+ * Fill in fields that were added to list items after content was first saved,
+ * and repoint any asset path that has since become an SVG.
  *
  * merge() handles new top-level and nested object keys, but arrays replace
- * wholesale, so a Show saved before `series` existed comes back without it.
+ * wholesale, so a Show saved before `series` existed comes back without it —
+ * and a cover image saved before the artwork was traced still points at a
+ * .webp that is no longer in the repository.
  */
 function normalize(content: Content): Content {
+  const healed = healAssetPaths(content);
   return {
-    ...content,
-    shows: content.shows.map((show) => ({ ...show, series: show.series ?? "" })),
+    ...healed,
+    shows: healed.shows.map((show) => ({ ...show, series: show.series ?? "" })),
   };
 }
 
