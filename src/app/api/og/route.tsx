@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og";
 import { getContent } from "@/lib/store";
+import { titleForPath } from "@/lib/card";
 
 export const dynamic = "force-dynamic";
 
@@ -16,12 +17,13 @@ export const dynamic = "force-dynamic";
  * would be slow and fragile for no gain at preview size.
  */
 export async function GET(request: Request) {
-  const { site } = await getContent();
+  const content = await getContent();
+  const { site } = content;
   const { searchParams } = new URL(request.url);
 
-  // A page can ask for its own title; otherwise the card speaks for the site.
-  const title = (searchParams.get("title") || site.name || "Pins & Needles Comedy").slice(0, 120);
-  const subtitle = (searchParams.get("subtitle") || site.tagline || "").slice(0, 160);
+  // A path, never free text: see titleForPath() for why.
+  const title = (titleForPath(content, searchParams.get("path") || "/") || site.name).slice(0, 120);
+  const subtitle = (site.tagline || "").slice(0, 160);
 
   return new ImageResponse(
     (
@@ -56,6 +58,14 @@ export async function GET(request: Request) {
         ) : null}
       </div>
     ),
-    { width: 1200, height: 630 }
+    {
+      width: 1200,
+      height: 630,
+      headers: {
+        // A share storm is many crawlers asking for the same picture. Let them
+        // and the CDN keep it, but not so long that a renamed page goes stale.
+        "Cache-Control": "public, max-age=300, s-maxage=3600, stale-while-revalidate=86400",
+      },
+    }
   );
 }

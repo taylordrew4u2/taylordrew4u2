@@ -25,11 +25,7 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata(): Promise<Metadata> {
   const { site } = await getContent();
   const base = site.url || "https://pinsandneedlescomedy.com";
-  const card = socialImage(
-    base,
-    absoluteUrl(base, site.seo.ogImage || "/brand/icon.svg"),
-    site.seo.title || site.name
-  );
+  const card = socialImage(base, absoluteUrl(base, site.seo.ogImage || "/brand/icon.svg"), "/");
   const indexable = (await onCanonicalHost(base)) && !site.seo.noindex;
   return {
     metadataBase: new URL(base),

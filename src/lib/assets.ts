@@ -61,12 +61,15 @@ export function healAssetPaths<T>(value: T): T {
  * nothing at all. When the chosen image is a vector, the crawler is sent to
  * /api/og instead, which draws a PNG at request time. A raster image set by
  * hand in the admin still wins, because somebody chose it on purpose.
+ *
+ * The card is asked for by path, not by title — the route looks up the words
+ * itself, so the URL cannot be used to put arbitrary text on the brand.
  */
-export function socialImage(base: string, chosen: string, title?: string): string {
+export function socialImage(base: string, chosen: string, path?: string): string {
   if (chosen && !/\.svg(\?|#|$)/i.test(chosen)) return chosen;
   const card = `${base.replace(/\/+$/, "")}/api/og`;
-  const headline = cardTitle(title);
-  return headline ? `${card}?title=${encodeURIComponent(headline)}` : card;
+  const page = (path || "").trim();
+  return page && page !== "/" ? `${card}?path=${encodeURIComponent(page)}` : card;
 }
 
 /**

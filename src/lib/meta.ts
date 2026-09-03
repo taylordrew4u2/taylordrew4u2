@@ -16,7 +16,7 @@ export async function toMetadata(
   const image = socialImage(
     base,
     absoluteUrl(base, seo.ogImage || site.seo.ogImage || site.logoUrl),
-    title
+    path
   );
   const description = seo.description || site.seo.description;
 
