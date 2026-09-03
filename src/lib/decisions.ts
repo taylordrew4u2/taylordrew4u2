@@ -1,9 +1,13 @@
 import type { Show, Submission, WeeklyPage } from "./types";
-import { formatTime, isUpcoming } from "./shows.ts";
+import { formatTime, isUpcoming, nyInstant, nyToday } from "./shows.ts";
 import { emptySeo, slugify } from "./seo.ts";
 
-/** Hard caps on what the public form accepts. Long enough for a real decision, short enough to read aloud. */
-export const DECISION_MAX = 280;
+/**
+ * Hard caps on what the public form accepts. Room to tell the story — people
+ * want to explain themselves, and the explanation is usually the funny part —
+ * while still being something a host can read aloud without losing the room.
+ */
+export const DECISION_MAX = 600;
 export const NAME_MAX = 60;
 
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] as const;
@@ -12,30 +16,55 @@ const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Frida
  * Clean up one submission from the form. Returns null when there is nothing
  * usable, which the route turns into a 400.
  *
- * Collapses whitespace, strips control characters, and caps lengths. The
- * name is dropped entirely unless the sender asked to be named — the form
- * sends `anonymous: true` by default, and a name typed then un-ticked should
- * not survive.
+ * The decision keeps its line breaks — people write a short paragraph, or a
+ * list of the reasons they shouldn't — but everything else is tidied: control
+ * characters go, runs of spaces collapse, and a wall of blank lines becomes
+ * one. The name is a single line, and is dropped entirely unless the sender
+ * asked to be named: the form sends `anonymous: true` by default, so a name
+ * typed and then un-ticked should not survive.
  */
 export function sanitizeSubmission(input: unknown): { decision: string; name: string } | null {
   if (typeof input !== "object" || input === null) return null;
   const raw = input as { decision?: unknown; name?: unknown; anonymous?: unknown };
 
-  const decision = cleanText(raw.decision, DECISION_MAX);
+  const decision = cleanBody(raw.decision, DECISION_MAX);
   if (!decision) return null;
 
   const named = raw.anonymous === false;
-  const name = named ? cleanText(raw.name, NAME_MAX) : "";
+  const name = named ? cleanLine(raw.name, NAME_MAX) : "";
   return { decision, name };
 }
 
-function cleanText(value: unknown, max: number): string {
+/**
+ * One line: every kind of whitespace becomes a single space. Control
+ * characters become spaces rather than vanishing, so a name pasted across
+ * two lines reads as "Sam Drew" and not "SamDrew".
+ */
+function cleanLine(value: unknown, max: number): string {
   if (typeof value !== "string") return "";
   return value
-    .replace(/[\u0000-\u001f\u007f]/g, "")
+    .replace(/[\u0000-\u001f\u007f]/g, " ")
     .replace(/\s+/g, " ")
     .trim()
-    .slice(0, max);
+    .slice(0, max)
+    .trim();
+}
+
+/** Several lines: paragraph breaks survive, everything else is tidied away. */
+function cleanBody(value: unknown, max: number): string {
+  if (typeof value !== "string") return "";
+  return value
+    .replace(/\r\n?/g, "\n")
+    .replace(/\t/g, " ")
+    // Control characters, except the newline we just normalised.
+    .replace(/[\u0000-\u0009\u000b-\u001f\u007f]/g, "")
+    .replace(/ +/g, " ")
+    .replace(/ *\n */g, "\n")
+    // At most one blank line between paragraphs.
+    .replace(/\n{3,}/g, "\n\n")
+    .trim()
+    .slice(0, max)
+    .trim();
 }
 
 /** A sortable id: the timestamp first so a directory listing comes back in order. */
@@ -153,4 +182,117 @@ export function weeklySummary(weekly: WeeklyPage): string {
     .join(" ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+/**
+ * When the form is open.
+ *
+ * The point of the window is that the person sending a decision is in the
+ * room. Leave it open all week and you collect a pile from the internet; open
+ * it an hour before the show and everything in the pile belongs to someone
+ * sitting there when it gets read out. `openMinutesBefore` counts back from
+ * the show's start time, `closeMinutesAfter` counts forward from it, and both
+ * are editable in the admin because a night that starts late shouldn't need a
+ * deploy.
+ */
+export type SubmissionWindow = {
+  open: boolean;
+  /** The occurrence this window belongs to, as a New York calendar date. */
+  date: string;
+  /** ISO instants, or "" when the weekly has no start time set. */
+  opensAt: string;
+  closesAt: string;
+  /** "Thursday at 8:00 PM" — for the closed panel on the page. */
+  opensLabel: string;
+};
+
+/**
+ * The window around the next occurrence of the weekly. Prefers a published
+ * night of the series (its date and start time win, because that is the one
+ * the host actually typed) and falls back to the standing details.
+ *
+ * Once an occurrence's window has closed, this rolls forward to the next one,
+ * so the page never advertises a door that shut two hours ago.
+ */
+export function submissionWindow(
+  weekly: WeeklyPage,
+  shows: Show[],
+  now: Date = new Date()
+): SubmissionWindow {
+  const today = nyToday(now);
+  const show = nextWeeklyShow(shows, weekly, today);
+
+  const first = occurrence(weekly, show?.date || nextDateForWeekday(weekly.weekday, today), show?.startTime);
+  // Past its close? The night is over — point at next week instead.
+  const current =
+    first.closesAt && now.getTime() > first.closesAt.getTime()
+      ? occurrence(weekly, addDays(first.date, 7), undefined)
+      : first;
+
+  const openNow = weekly.alwaysOpen
+    ? true
+    : Boolean(
+        current.opensAt &&
+          current.closesAt &&
+          now.getTime() >= current.opensAt.getTime() &&
+          now.getTime() <= current.closesAt.getTime()
+      );
+
+  return {
+    open: openNow,
+    date: current.date,
+    opensAt: current.opensAt?.toISOString() ?? "",
+    closesAt: current.closesAt?.toISOString() ?? "",
+    opensLabel: current.opensAt ? labelFor(current.date, current.opensAt, weekly.weekday) : "",
+  };
+}
+
+function occurrence(
+  weekly: WeeklyPage,
+  date: string,
+  startTime: string | undefined
+): { date: string; opensAt: Date | null; closesAt: Date | null } {
+  const start = nyInstant(date, startTime || weekly.startTime);
+  if (!start) return { date, opensAt: null, closesAt: null };
+  return {
+    date,
+    opensAt: new Date(start.getTime() - clamp(weekly.openMinutesBefore, 0, 10_080) * 60_000),
+    closesAt: new Date(start.getTime() + clamp(weekly.closeMinutesAfter, 0, 10_080) * 60_000),
+  };
+}
+
+function clamp(value: number, min: number, max: number): number {
+  if (!Number.isFinite(value)) return min;
+  return Math.min(max, Math.max(min, Math.round(value)));
+}
+
+function addDays(date: string, days: number): string {
+  const base = new Date(`${date}T12:00:00Z`);
+  base.setUTCDate(base.getUTCDate() + days);
+  return base.toISOString().slice(0, 10);
+}
+
+/** "Thursday at 8:00 PM" — the weekday of the occurrence, not of the caller. */
+function labelFor(date: string, opensAt: Date, fallbackWeekday: WeeklyPage["weekday"]): string {
+  const weekday =
+    WEEKDAYS[new Date(`${date}T12:00:00Z`).getUTCDay()] ?? fallbackWeekday;
+  const clock = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(opensAt);
+  return `${weekday} at ${clock}`;
+}
+
+/**
+ * The closed-panel copy with `{when}` filled in. Falls back to dropping the
+ * placeholder cleanly when the weekly has no start time to count back from.
+ */
+export function closedMessage(weekly: WeeklyPage, window: SubmissionWindow): string {
+  const text = weekly.closedText || "";
+  if (!text.includes("{when}")) return text;
+  if (!window.opensLabel) {
+    return text.replace(/\s*—?\s*\{when\}/g, "").replace(/\s+/g, " ").trim();
+  }
+  return text.replace(/\{when\}/g, window.opensLabel);
 }

@@ -281,6 +281,16 @@ export type WeeklyPage = {
   submitLabel: string;
   /** Shown after a successful send. */
   thanksText: string;
+  /**
+   * The form only opens around the show, so whoever sends a decision is in
+   * the room to hear it read out. Minutes either side of the start time.
+   */
+  openMinutesBefore: number;
+  closeMinutesAfter: number;
+  /** Host override: keep the form open regardless of the clock. */
+  alwaysOpen: boolean;
+  /** Shown in place of the form outside the window. */
+  closedText: string;
   /** Whether the public page shows how many decisions are in this week. */
   showCount: boolean;
   /** Markdown-lite, same as a blog post body. */

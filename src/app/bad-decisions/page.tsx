@@ -10,7 +10,13 @@ import { toMetadata } from "@/lib/meta";
 import { formatDate, renderBody } from "@/lib/render";
 import { breadcrumbSchema, faqSchema, weeklySchema } from "@/lib/schema";
 import { groupByRole, nyToday } from "@/lib/shows";
-import { nextWeeklyShow, weeklyScheduleLine, weeklyVenueLine } from "@/lib/decisions";
+import {
+  closedMessage,
+  nextWeeklyShow,
+  submissionWindow,
+  weeklyScheduleLine,
+  weeklyVenueLine,
+} from "@/lib/decisions";
 
 export const dynamic = "force-dynamic";
 
@@ -40,8 +46,11 @@ export default async function WeeklyPage() {
   const venue = weeklyVenueLine(weekly);
   const bill = next ? groupByRole(next.lineup) : [];
 
+  const gate = submissionWindow(weekly, content.shows);
+  const closed = closedMessage(weekly, gate);
+
   let initialCount: number | null = null;
-  if (weekly.showCount) {
+  if (weekly.showCount && gate.open) {
     try {
       initialCount = await countOpen();
     } catch (error) {
@@ -89,6 +98,8 @@ export default async function WeeklyPage() {
           thanksText={weekly.thanksText}
           showCount={weekly.showCount}
           initialCount={initialCount}
+          initialOpen={gate.open}
+          initialClosedText={closed}
         />
         {weekly.roomNote ? (
           <p className="mt-4 text-[13px] leading-relaxed text-[var(--pnc-muted)]">{weekly.roomNote}</p>

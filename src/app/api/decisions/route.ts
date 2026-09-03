@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { sanitizeSubmission } from "@/lib/decisions";
+import { closedMessage, sanitizeSubmission, submissionWindow } from "@/lib/decisions";
 import { getContent } from "@/lib/store";
 import { addSubmission, countOpen } from "@/lib/submissions";
 
@@ -33,24 +33,48 @@ function addressOf(request: Request): string {
   );
 }
 
-/** How many decisions are in. Only answers when the page is set to show it. */
+/**
+ * Whether the form is open, and how many decisions are in. The page polls
+ * this so a phone left open on the table flips to the form by itself when
+ * the window opens, without anyone reloading.
+ */
 export async function GET() {
-  const { weekly } = await getContent();
-  if (!weekly.enabled || !weekly.showCount) {
-    return NextResponse.json({ ok: true, count: null });
+  const content = await getContent();
+  const { weekly } = content;
+  const gate = submissionWindow(weekly, content.shows);
+  const state = {
+    ok: true,
+    open: weekly.enabled && gate.open,
+    opensLabel: gate.opensLabel,
+    closedText: closedMessage(weekly, gate),
+  };
+
+  if (!weekly.enabled || !weekly.showCount || !gate.open) {
+    return NextResponse.json({ ...state, count: null });
   }
   try {
-    return NextResponse.json({ ok: true, count: await countOpen() });
+    return NextResponse.json({ ...state, count: await countOpen() });
   } catch (error) {
     console.error("[decisions] count failed:", error);
-    return NextResponse.json({ ok: true, count: null });
+    return NextResponse.json({ ...state, count: null });
   }
 }
 
 export async function POST(request: Request) {
-  const { weekly } = await getContent();
+  const content = await getContent();
+  const { weekly } = content;
   if (!weekly.enabled) {
     return NextResponse.json({ ok: false, error: "Submissions are closed." }, { status: 404 });
+  }
+
+  // The window is enforced here, not only in the form: the endpoint is the
+  // thing a QR code points at, and it is open to anyone who has the URL.
+  const gate = submissionWindow(weekly, content.shows);
+  if (!gate.open) {
+    return NextResponse.json(
+      { ok: false, open: false, error: closedMessage(weekly, gate) || "Submissions are closed." },
+      { status: 403 }
+    );
   }
 
   let body: unknown;

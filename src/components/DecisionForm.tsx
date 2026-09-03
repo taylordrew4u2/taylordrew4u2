@@ -4,9 +4,14 @@ import { useEffect, useState } from "react";
 import { DECISION_MAX, NAME_MAX } from "@/lib/decisions";
 
 /**
- * The submission form. Built for a phone in a bar: one field, one toggle,
+ * The submission form. Built for a phone in a bar: one field, one choice,
  * one button, and a thank-you that replaces the form so nobody sends twice
  * by accident.
+ *
+ * Outside the show's window the form is replaced by a note saying when it
+ * opens. The poll that keeps the count moving also watches for the window
+ * opening, so a phone left face-up on the table turns into a live form on
+ * its own.
  */
 export default function DecisionForm({
   question,
@@ -17,6 +22,8 @@ export default function DecisionForm({
   thanksText,
   showCount,
   initialCount,
+  initialOpen,
+  initialClosedText,
 }: {
   question: string;
   placeholder: string;
@@ -26,6 +33,8 @@ export default function DecisionForm({
   thanksText: string;
   showCount: boolean;
   initialCount: number | null;
+  initialOpen: boolean;
+  initialClosedText: string;
 }) {
   const [decision, setDecision] = useState("");
   const [named, setNamed] = useState(false);
@@ -35,22 +44,25 @@ export default function DecisionForm({
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
   const [count, setCount] = useState<number | null>(initialCount);
+  const [open, setOpen] = useState(initialOpen);
+  const [closedText, setClosedText] = useState(initialClosedText);
 
-  // Keep the count moving while the page is open during the bar hour.
+  // Watch for the window opening, and keep the count moving once it has.
   useEffect(() => {
-    if (!showCount) return;
     const tick = async () => {
       try {
         const response = await fetch("/api/decisions", { cache: "no-store" });
         const data = await response.json();
-        if (typeof data.count === "number") setCount(data.count);
+        if (typeof data.open === "boolean") setOpen(data.open);
+        if (typeof data.closedText === "string") setClosedText(data.closedText);
+        setCount(typeof data.count === "number" ? data.count : null);
       } catch {
         // A missed tick is nothing; the next one will land.
       }
     };
     const timer = setInterval(tick, 20_000);
     return () => clearInterval(timer);
-  }, [showCount]);
+  }, []);
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -74,12 +86,25 @@ export default function DecisionForm({
     }
   };
 
+  const remaining = DECISION_MAX - decision.length;
+
   const counter =
     showCount && count !== null ? (
       <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--pnc-muted)]">
         {count === 0 ? "No decisions in yet. Be first." : `${count} ${count === 1 ? "decision" : "decisions"} in so far`}
       </p>
     ) : null;
+
+  if (!open) {
+    return (
+      <div className="border border-dashed border-white/20 p-5 sm:p-6">
+        <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--pnc-muted)]">
+          Submissions closed
+        </p>
+        <p className="mt-3 text-[17px] leading-relaxed">{closedText}</p>
+      </div>
+    );
+  }
 
   if (done) {
     return (
@@ -110,24 +135,38 @@ export default function DecisionForm({
         </span>
         <textarea
           required
-          rows={3}
+          rows={6}
           maxLength={DECISION_MAX}
           value={decision}
           onChange={(event) => setDecision(event.target.value)}
           placeholder={placeholder}
           autoComplete="off"
-          className="mt-4 w-full resize-none border border-white/25 bg-transparent px-3 py-3 text-[17px] leading-relaxed outline-none placeholder:text-white/30 focus:border-[var(--pnc-accent)]"
+          className="mt-4 w-full resize-y border border-white/25 bg-transparent px-3 py-3 text-[17px] leading-relaxed outline-none placeholder:text-white/30 focus:border-[var(--pnc-accent)]"
         />
       </label>
 
-      <label className="mt-4 flex cursor-pointer items-center gap-3">
+      {/* Only appears once the cap is close, so it never reads as a target. */}
+      {remaining <= 100 ? (
+        <p className="mt-2 text-right text-[12px] text-[var(--pnc-muted)]">
+          {remaining} character{remaining === 1 ? "" : "s"} left
+        </p>
+      ) : null}
+
+      <label className="mt-4 flex cursor-pointer items-start gap-3">
         <input
           type="checkbox"
           checked={named}
           onChange={(event) => setNamed(event.target.checked)}
-          className="h-5 w-5 accent-[var(--pnc-accent)]"
+          className="mt-0.5 h-5 w-5 shrink-0 accent-[var(--pnc-accent)]"
         />
-        <span className="text-[15px]">{namePrompt}</span>
+        <span className="text-[15px] leading-snug">
+          {namePrompt}
+          <span className="mt-1 block text-[13px] text-[var(--pnc-muted)]">
+            {named
+              ? "Your name gets read out with it."
+              : "Leave this unticked and it stays anonymous."}
+          </span>
+        </span>
       </label>
 
       {named ? (

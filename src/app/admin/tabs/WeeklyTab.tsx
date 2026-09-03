@@ -89,6 +89,41 @@ export default function WeeklyTab({ content, update }: { content: Content; updat
         />
       </Section>
 
+      <Section
+        title="When the form opens"
+        hint="Counted from the show's start time, in New York. Keeping the window tight is the point: whoever sends a decision is in the room to hear it read out. A published night in the Shows tab uses its own start time; otherwise it's the standing one above."
+      >
+        <Row>
+          <Text
+            label="Opens this many minutes before"
+            type="number"
+            hint="60 = an hour before the show"
+            value={String(weekly.openMinutesBefore)}
+            onChange={(value) => set("openMinutesBefore")(Math.max(0, Number(value) || 0))}
+          />
+          <Text
+            label="Closes this many minutes after"
+            type="number"
+            hint="240 = four hours after it starts, so the pile stays open through the show"
+            value={String(weekly.closeMinutesAfter)}
+            onChange={(value) => set("closeMinutesAfter")(Math.max(0, Number(value) || 0))}
+          />
+        </Row>
+        <Area
+          label="What the page says while it's shut"
+          rows={2}
+          hint="{when} becomes the night and time it opens — e.g. Thursday at 8:00 PM"
+          value={weekly.closedText}
+          onChange={set("closedText")}
+        />
+        <Toggle
+          label="Keep the form open all the time"
+          hint="ignores the window above — for testing, or a night that runs to its own clock"
+          value={weekly.alwaysOpen}
+          onChange={set("alwaysOpen")}
+        />
+      </Section>
+
       <Section title="The rest of the page">
         <Area
           label="How it works"
@@ -251,7 +286,7 @@ function StagePanel({ enabled }: { enabled: boolean }) {
               <p className={`text-[11px] uppercase tracking-[0.18em] ${index === 0 ? "text-neutral-600" : "text-neutral-500"}`}>
                 {entry.name ? `Called out: ${entry.name}` : "Anonymous"}
               </p>
-              <p className={`mt-2 leading-snug ${index === 0 ? "text-2xl sm:text-3xl" : "text-[16px]"}`}>{entry.decision}</p>
+              <p className={`mt-2 whitespace-pre-line leading-snug ${index === 0 ? "text-2xl sm:text-3xl" : "text-[16px]"}`}>{entry.decision}</p>
               <div className="mt-3 flex gap-2">
                 <Button tone={index === 0 ? "default" : "ghost"} onClick={() => act({ action: "reopen", id: entry.id })} disabled={busy}>
                   Put it back
@@ -270,7 +305,7 @@ function StagePanel({ enabled }: { enabled: boolean }) {
             {open.map((entry) => (
               <li key={entry.id} className="flex items-start justify-between gap-3 rounded-md border border-neutral-800 px-3 py-2">
                 <span className="min-w-0">
-                  <span className="block text-[14px] leading-snug text-neutral-100">{entry.decision}</span>
+                  <span className="block whitespace-pre-line text-[14px] leading-snug text-neutral-100">{entry.decision}</span>
                   <span className="block text-[11px] text-neutral-500">
                     {entry.name ? entry.name : "anonymous"}
                     {entry.createdAt ? ` · ${new Date(entry.createdAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}` : ""}
@@ -298,7 +333,7 @@ function StagePanel({ enabled }: { enabled: boolean }) {
                 .filter((entry) => entry.status === "archived")
                 .map((entry) => (
                   <li key={entry.id} className="flex items-start justify-between gap-3 text-[13px] text-neutral-400">
-                    <span>
+                    <span className="whitespace-pre-line">
                       {entry.decision}
                       {entry.name ? <span className="text-neutral-600"> — {entry.name}</span> : null}
                     </span>

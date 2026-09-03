@@ -416,17 +416,23 @@ Standard microphone and sound system, basic stage lighting, minimal setup and br
     roomNote: "The room is small. Doors at 8 — come early.",
     posterUrl: "/brand/bad-decisions-flyer.png",
     posterAlt: "Pins & Needles: Bad Decisions — every Thursday at Pixelated Records, Ridgewood",
-    question: "What's a decision you haven't made yet?",
-    placeholder: "Quit my job. Text my ex. Get the dog.",
-    namePrompt: "Put my name on it. Call me out.",
+    question: "Tell us about a bad decision — one you've made, or one you're about to.",
+    placeholder:
+      "Quit my job. Texted my ex. Thinking about getting the dog. Tell us as much of it as you want — the backstory is usually the funny part.",
+    namePrompt: "Sign my name. Call me out.",
     formNote:
-      "One line is enough. Two or three get pulled at random at the end of the show. Anonymous unless you tell us otherwise.",
+      "Write as much as you want. A few get pulled at random at the end of the show. Anonymous unless you sign your name.",
     submitLabel: "Send it",
     thanksText: "Got it. Doors are at 8, show's at 9. If yours gets pulled, you'll know.",
+    openMinutesBefore: 60,
+    closeMinutesAfter: 240,
+    alwaysOpen: false,
+    closedText:
+      "The form opens an hour before the show, so everything in the pile belongs to somebody in the room. Come back {when} — or just come to the show.",
     showCount: true,
     howItWorks: `## How it works
 
-**Send it in.** Scan the code in the room or use this page. Quit my job, text my ex, get the dog. One line.
+**Send it in.** Scan the code in the room once the form opens — an hour before the show. A decision you've made, or one you're circling. A line, or the whole story.
 
 **Four comics do stand-up.** An hour of sets. By the end you know exactly who's about to give you advice.
 
