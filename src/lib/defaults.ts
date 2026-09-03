@@ -400,7 +400,7 @@ Standard microphone and sound system, basic stage lighting, minimal setup and br
     enabled: true,
     slug: "bad-decisions",
     title: "Pins & Needles: Bad Decisions",
-    tagline: "Comedians comment on your bad choices.",
+    tagline: "Send in a decision. Four comedians talk it through on stage.",
     weekday: "Thursday",
     doorsTime: "20:00",
     startTime: "21:00",
@@ -417,30 +417,30 @@ Standard microphone and sound system, basic stage lighting, minimal setup and br
     posterUrl: "/brand/bad-decisions-flyer.svg",
     posterAlt: "Pins & Needles: Bad Decisions — every Thursday at Pixelated Records, Ridgewood",
     question: "Tell us about a bad decision you've made, or one you want to make.",
-    placeholder: "Quit my job. Texted my ex. Getting the dog. Tell us the whole story if you want.",
-    namePrompt: "Sign my name. Call me out.",
+    placeholder: "Quit my job. Texted my ex. Might get the dog. Tell us as much as you want.",
+    namePrompt: "Put my name on it.",
     formNote:
-      "Say as much as you want. A few get pulled at random at the end of the show. You stay anonymous unless you sign your name.",
+      "Say as much as you want. A few get pulled at random at the end of the show — anonymous unless you put your name on it.",
     submitLabel: "Send it",
-    thanksText: "Got it. Doors are at 8, show's at 9. If yours gets pulled, you'll know.",
+    thanksText: "Got it — it's in the pile. Doors at 8, show at 9.",
     openMinutesBefore: 60,
     closeMinutesAfter: 240,
     alwaysOpen: false,
-    closedText: "The form opens an hour before the show. Come back {when}.",
+    closedText: "Submissions open an hour before the show. The next one is {when}.",
     showCount: true,
     howItWorks: `## How it works
 
-**Send it in.** Scan the code in the room. The form opens an hour before the show. Tell us a decision you've made, or one you're thinking about — a line, or the whole story.
+**Send it in.** Scan the code in the room once the form opens, an hour before the show. A decision you've made, or one you're still thinking about — a line, or the whole story.
 
-**Four comics do stand-up.** An hour of sets. By the end you know exactly who's about to give you advice.
+**Four comics do stand-up.** An hour of sets, so by the time anyone weighs in on your life you know exactly who you're dealing with.
 
-**The draw.** The host pulls two or three at random. You get a mic where you're sitting, and the lineup talks you into the worst possible version of it.`,
+**The draw.** The host pulls two or three at random. You get a mic where you're sitting and the lineup talks it through. Some of the advice is even good.`,
     closingLine: "Not a roast. Nobody gets humiliated. Bring the friend you're about to talk out of something.",
     thisWeekHeading: "This week",
     noLineupText: "This week's lineup drops on Instagram. Same room, same time.",
     showOnHome: true,
     homeStripText:
-      "Bad Decisions is our free weekly at Pixelated Records in Ridgewood — text in a decision, four comics do sets, then they tell you what to do.",
+      "Bad Decisions is our free weekly at Pixelated Records in Ridgewood — send in a decision, four comics do sets, then they talk it through.",
     homeStripCta: "Send yours in",
     showOnShowsPage: true,
     seo: seo({

@@ -97,14 +97,14 @@ export default function DecisionForm({
       </p>
     ) : null;
 
+  // Outside the window this is a note, not a shut door. Most people who find
+  // this page are not in the room on a Thursday night, and an empty bordered
+  // panel at the top of the page made a running show look cancelled.
   if (!open) {
     return (
-      <div className="border border-dashed border-white/20 p-5 sm:p-6">
-        <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--pnc-muted)]">
-          Submissions closed
-        </p>
-        <p className="mt-3 text-[17px] leading-relaxed">{closedText}</p>
-      </div>
+      <p className="border-l-2 border-[var(--pnc-accent)] pl-4 text-[17px] leading-relaxed">
+        {closedText}
+      </p>
     );
   }
 
