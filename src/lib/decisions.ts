@@ -273,7 +273,9 @@ export function submissionWindow(
     date: current.date,
     opensAt: current.opensAt?.toISOString() ?? "",
     closesAt: current.closesAt?.toISOString() ?? "",
-    opensLabel: current.opensAt ? labelFor(current.date, current.opensAt, weekly.weekday) : "",
+    opensLabel: current.opensAt
+      ? labelFor(current.date, current.opensAt, weekly.weekday, today)
+      : "",
   };
 }
 
@@ -302,15 +304,28 @@ function addDays(date: string, days: number): string {
   return base.toISOString().slice(0, 10);
 }
 
-/** "Thursday at 8:00 PM" — the weekday of the occurrence, not of the caller. */
-function labelFor(date: string, opensAt: Date, fallbackWeekday: WeeklyPage["weekday"]): string {
-  const weekday =
-    WEEKDAYS[new Date(`${date}T12:00:00Z`).getUTCDay()] ?? fallbackWeekday;
+/**
+ * "Thursday at 8:00 PM", or "tonight at 8:00 PM" when that is today.
+ *
+ * Naming the weekday on the day itself reads as though it means next week,
+ * which is exactly wrong for somebody holding a flyer in the afternoon.
+ */
+function labelFor(
+  date: string,
+  opensAt: Date,
+  fallbackWeekday: WeeklyPage["weekday"],
+  today: string
+): string {
   const clock = new Intl.DateTimeFormat("en-US", {
     timeZone: "America/New_York",
     hour: "numeric",
     minute: "2-digit",
   }).format(opensAt);
+
+  if (date === today) return `tonight at ${clock}`;
+  if (date === addDays(today, 1)) return `tomorrow at ${clock}`;
+
+  const weekday = WEEKDAYS[new Date(`${date}T12:00:00Z`).getUTCDay()] ?? fallbackWeekday;
   return `${weekday} at ${clock}`;
 }
 
