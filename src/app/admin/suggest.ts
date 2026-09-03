@@ -3,6 +3,7 @@ import { clamp, stripMarkdown, suggestKeywords } from "@/lib/seo";
 import { creditLine, taylorFaq, taylorKeyword } from "@/lib/brand";
 import { formatDate } from "@/lib/render";
 import { formatTime, showSummary, venueLine } from "@/lib/shows";
+import { weeklyScheduleLine, weeklySummary, weeklyVenueLine } from "@/lib/decisions";
 
 export type Suggestion = {
   title: string;
@@ -28,7 +29,7 @@ function base(content: Content) {
 /** Build an SEO suggestion for one page or post. All of it is editable afterwards. */
 export function suggestFor(
   content: Content,
-  key: "site" | "home" | "news" | "shows" | "show" | "shop" | "about" | "contact" | "post",
+  key: "site" | "home" | "news" | "shows" | "show" | "shop" | "about" | "contact" | "post" | "weekly",
   post?: Post,
   show?: Show
 ): Suggestion {
@@ -192,6 +193,39 @@ export function suggestFor(
           },
         ]
       );
+    case "weekly": {
+      const weekly = content.weekly;
+      const where = weeklyVenueLine(weekly);
+      const when = weeklyScheduleLine(weekly);
+      return make(
+        `${weekly.title.replace(/^Pins & Needles:\s*/i, "")} — Free Weekly Comedy in ${weekly.city || "Queens"}`,
+        `${when} at ${weekly.venueName || where}. ${weekly.tagline} ${weekly.price ? `${weekly.price} entry.` : ""}`,
+        `${weeklySummary(weekly)} Before the show the audience sends in a decision they haven't made yet at ${root}/bad-decisions; after four comedians perform, the host draws a few at random and the lineup gives that person advice. Submissions can be anonymous or named. A spin-off of ${brand}, hosted by ${creditLine(
+          content.about.producers
+        )}. Not a roast.`,
+        `${weekly.title} ${weekly.tagline} ${weekly.howItWorks} ${where} ${weekly.city} free weekly comedy`,
+        "/bad-decisions",
+        [
+          `free comedy ${(weekly.city || "queens").toLowerCase()}`,
+          `comedy ${(weekly.city || "queens").toLowerCase()} ${weekly.weekday.toLowerCase()}`,
+          `${(weekly.venueName || "").toLowerCase()} comedy`.trim(),
+          "audience participation comedy nyc",
+          taylorKeyword(content.about.producers),
+        ].filter(Boolean),
+        weekly.posterUrl || fallbackImage,
+        [
+          {
+            q: `What is ${weekly.title}?`,
+            a: `A ${weekly.price ? `${weekly.price.toLowerCase()} ` : ""}weekly stand-up show${where ? ` at ${where}` : ""} where the audience sends in decisions they haven't made yet and comedians pull a few at random and give that person advice.`,
+          },
+          { q: `When is ${weekly.title}?`, a: `${when}${where ? ` at ${where}` : ""}.` },
+          {
+            q: "Do I have to put my name on my decision?",
+            a: "No. Submissions are anonymous unless you choose to add your name and get called out.",
+          },
+        ]
+      );
+    }
     case "contact":
       return make(
         `Contact | ${brand}`,

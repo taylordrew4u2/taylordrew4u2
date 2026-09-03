@@ -1,0 +1,169 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { DECISION_MAX, NAME_MAX } from "@/lib/decisions";
+
+/**
+ * The submission form. Built for a phone in a bar: one field, one toggle,
+ * one button, and a thank-you that replaces the form so nobody sends twice
+ * by accident.
+ */
+export default function DecisionForm({
+  question,
+  placeholder,
+  namePrompt,
+  formNote,
+  submitLabel,
+  thanksText,
+  showCount,
+  initialCount,
+}: {
+  question: string;
+  placeholder: string;
+  namePrompt: string;
+  formNote: string;
+  submitLabel: string;
+  thanksText: string;
+  showCount: boolean;
+  initialCount: number | null;
+}) {
+  const [decision, setDecision] = useState("");
+  const [named, setNamed] = useState(false);
+  const [name, setName] = useState("");
+  const [website, setWebsite] = useState(""); // honeypot
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(false);
+  const [error, setError] = useState("");
+  const [count, setCount] = useState<number | null>(initialCount);
+
+  // Keep the count moving while the page is open during the bar hour.
+  useEffect(() => {
+    if (!showCount) return;
+    const tick = async () => {
+      try {
+        const response = await fetch("/api/decisions", { cache: "no-store" });
+        const data = await response.json();
+        if (typeof data.count === "number") setCount(data.count);
+      } catch {
+        // A missed tick is nothing; the next one will land.
+      }
+    };
+    const timer = setInterval(tick, 20_000);
+    return () => clearInterval(timer);
+  }, [showCount]);
+
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      const response = await fetch("/api/decisions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ decision, name, anonymous: !named, website }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.ok) throw new Error(data.error || "Couldn't send that.");
+      if (typeof data.count === "number") setCount(data.count);
+      setDone(true);
+    } catch (sendError) {
+      setError(sendError instanceof Error ? sendError.message : "Couldn't send that.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const counter =
+    showCount && count !== null ? (
+      <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--pnc-muted)]">
+        {count === 0 ? "No decisions in yet. Be first." : `${count} ${count === 1 ? "decision" : "decisions"} in so far`}
+      </p>
+    ) : null;
+
+  if (done) {
+    return (
+      <div className="border border-white/15 p-5 sm:p-6">
+        <p className="text-[17px] leading-relaxed">{thanksText}</p>
+        <div className="mt-4">{counter}</div>
+        <button
+          type="button"
+          onClick={() => {
+            setDecision("");
+            setName("");
+            setNamed(false);
+            setDone(false);
+          }}
+          className="mt-5 text-[12px] uppercase tracking-[0.22em] text-[var(--pnc-muted)] underline underline-offset-4 hover:text-[var(--pnc-fg)]"
+        >
+          Send another
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={submit} className="border border-white/15 p-5 sm:p-6">
+      <label className="block">
+        <span className="block text-[20px] leading-snug sm:text-[22px]" style={{ fontFamily: "var(--pnc-heading)" }}>
+          {question}
+        </span>
+        <textarea
+          required
+          rows={3}
+          maxLength={DECISION_MAX}
+          value={decision}
+          onChange={(event) => setDecision(event.target.value)}
+          placeholder={placeholder}
+          autoComplete="off"
+          className="mt-4 w-full resize-none border border-white/25 bg-transparent px-3 py-3 text-[17px] leading-relaxed outline-none placeholder:text-white/30 focus:border-[var(--pnc-accent)]"
+        />
+      </label>
+
+      <label className="mt-4 flex cursor-pointer items-center gap-3">
+        <input
+          type="checkbox"
+          checked={named}
+          onChange={(event) => setNamed(event.target.checked)}
+          className="h-5 w-5 accent-[var(--pnc-accent)]"
+        />
+        <span className="text-[15px]">{namePrompt}</span>
+      </label>
+
+      {named ? (
+        <input
+          type="text"
+          maxLength={NAME_MAX}
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          placeholder="Your name"
+          autoComplete="name"
+          className="mt-3 w-full border border-white/25 bg-transparent px-3 py-2.5 text-[16px] outline-none placeholder:text-white/30 focus:border-[var(--pnc-accent)]"
+        />
+      ) : null}
+
+      {/* Honeypot — hidden from people, filled by bots. */}
+      <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
+        <label>
+          Website
+          <input type="text" tabIndex={-1} autoComplete="off" value={website} onChange={(event) => setWebsite(event.target.value)} />
+        </label>
+      </div>
+
+      <button
+        type="submit"
+        disabled={busy || !decision.trim()}
+        className="mt-5 block w-full bg-[var(--pnc-fg)] px-5 py-3.5 text-center text-[13px] uppercase tracking-[0.22em] text-[var(--pnc-bg)] transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        {busy ? "Sending…" : submitLabel}
+      </button>
+
+      {error ? <p className="mt-3 text-[13px] text-[var(--pnc-accent)]">{error}</p> : null}
+
+      {formNote ? (
+        <p className="mt-4 text-[13px] leading-relaxed text-[var(--pnc-muted)]">{formNote}</p>
+      ) : null}
+      <div className="mt-3">{counter}</div>
+    </form>
+  );
+}
