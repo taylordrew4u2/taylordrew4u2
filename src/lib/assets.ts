@@ -52,3 +52,31 @@ export function healAssetPaths<T>(value: T): T {
   }
   return value;
 }
+
+/**
+ * The image a social crawler should be handed.
+ *
+ * Facebook, X, Slack and iMessage all decline to render an SVG preview, and
+ * every mark this site ships is now an SVG — so a card pointing at one shows
+ * nothing at all. When the chosen image is a vector, the crawler is sent to
+ * /api/og instead, which draws a PNG at request time. A raster image set by
+ * hand in the admin still wins, because somebody chose it on purpose.
+ */
+export function socialImage(base: string, chosen: string, title?: string): string {
+  if (chosen && !/\.svg(\?|#|$)/i.test(chosen)) return chosen;
+  const card = `${base.replace(/\/+$/, "")}/api/og`;
+  const headline = cardTitle(title);
+  return headline ? `${card}?title=${encodeURIComponent(headline)}` : card;
+}
+
+/**
+ * The headline half of a page title.
+ *
+ * SEO titles carry a keyword tail after a separator — "Pins & Needles Comedy
+ * | NYC Tattoo Comedy Show & Underground Stand-Up" — which is right for a
+ * search result and wrong for a card, where it fills three lines and reads
+ * like a billboard. The card takes what comes before the first separator.
+ */
+export function cardTitle(title?: string): string {
+  return (title || "").split(/\s+[|·—–]\s+/)[0].trim();
+}

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Archivo_Black, Inter } from "next/font/google";
 import { getContent } from "@/lib/store";
 import { absoluteUrl } from "@/lib/seo";
+import { socialImage } from "@/lib/assets";
 import { onCanonicalHost } from "@/lib/host";
 import SiteFooter from "@/components/SiteFooter";
 import "./globals.css";
@@ -24,6 +25,11 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata(): Promise<Metadata> {
   const { site } = await getContent();
   const base = site.url || "https://pinsandneedlescomedy.com";
+  const card = socialImage(
+    base,
+    absoluteUrl(base, site.seo.ogImage || "/brand/icon.svg"),
+    site.seo.title || site.name
+  );
   const indexable = (await onCanonicalHost(base)) && !site.seo.noindex;
   return {
     metadataBase: new URL(base),
@@ -45,13 +51,13 @@ export async function generateMetadata(): Promise<Metadata> {
       title: site.seo.title || site.name,
       description: site.seo.description,
       url: site.seo.canonical || base,
-      images: [absoluteUrl(base, site.seo.ogImage || "/brand/icon.svg")],
+      images: [card],
     },
     twitter: {
       card: "summary_large_image",
       title: site.seo.title || site.name,
       description: site.seo.description,
-      images: [absoluteUrl(base, site.seo.ogImage || "/brand/icon.svg")],
+      images: [card],
     },
     robots: indexable
       ? { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 }
