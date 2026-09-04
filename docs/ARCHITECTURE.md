@@ -109,6 +109,29 @@ Everything in `public/` is an SVG. The brand marks were traced from the original
 line art, which is what tracing is for: `public/brand` went from 2.6MB of PNG to
 320KB, resolution-independent.
 
+`public/posts` is photographs and printed flyers rather than line art, and a
+single tracing recipe does not serve both. One pass — potrace's usual
+advice — median-filters the source to kill paper grain and photo noise, picks
+a small palette, and traces each colour as its own layer. Run on a photo of
+skin and fabric, or a flyer with fine print, that reproduces the picture. Run
+on real black-ink line art, the same median filter erodes the strokes it was
+meant to protect, and where two close paper-texture shades get split into
+separate colours, the boundary between them — jagged at the pixel level over
+what should read as one flat area — traces as thousands of disconnected
+paths. One flyer showed exactly this on the home page: a clean cream-and-red
+poster came out as a tile of pure static — 1.3MB for what should be a few
+tens of kilobytes of flat colour.
+
+So which recipe runs is decided per image rather than fixed: sample the
+source at low resolution, and if fewer than 5% of pixels carry any real
+saturation, it is ink on paper — trace it as a plain two-colour threshold at
+full resolution, no denoising, because there is no grain to protect against
+and the whole point is the strokes. Otherwise denoise first and trace an
+eight-colour palette, because that is a photograph or a flat-colour graphic,
+and the noise is real. Checked against the outlier along with the rest of the
+batch: 29 images, 27MB of bloated or broken traces down to 5.7MB of
+smaller **and** cleaner ones.
+
 That breaks link previews, because no social platform renders an SVG. Rather
 than put a raster file back in the repository, `/api/og` draws a 1200×630 PNG at
 request time from the site's own content. It takes a **path**, never free text —
@@ -125,7 +148,7 @@ cannot outrank the real site.
 
 ## Testing
 
-129 tests on the Node test runner with `--experimental-strip-types`. No test
+194 tests on the Node test runner with `--experimental-strip-types`. No test
 framework, no transpile step, no watch process.
 
 That is possible because the logic worth testing lives in plain modules — dates,
