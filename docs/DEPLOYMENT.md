@@ -13,7 +13,7 @@ Production and Preview.
 | `ADMIN_PASSWORD` | yes | Password for `/admin`. |
 | `ADMIN_SECRET` | yes | Signs the admin cookie. `openssl rand -hex 32`. |
 | `DECISIONS_INBOUND_SECRET` | no | Lets a relay post a texted decision to `/api/decisions/inbound`. Unset, that endpoint refuses everything. |
-| `DECISIONS_INBOUND_FROM` | no | Comma-separated senders the endpoint accepts. Unset, it accepts anything with the secret. |
+| `DECISIONS_INBOUND_FROM` | no | Comma-separated senders the endpoint accepts. Unset, it accepts anything with the secret. Note this cannot filter text spam — see section 5. |
 
 **`/admin` refuses every login unless both admin variables are set.** There is
 no production fallback — see [ARCHITECTURE.md](./ARCHITECTURE.md#the-admin-fails-closed).
@@ -126,9 +126,15 @@ HTML part with the footer still attached.
 
 Optionally set `DECISIONS_INBOUND_FROM` to one or more addresses (comma
 separated). Only mail from those is accepted, everything else is ignored
-quietly. **Set this if the relay watches a whole inbox** — a phone number
-collects marketing texts, and spam during show hours would otherwise be read
-out on stage.
+quietly. Set it if the relay watches a whole inbox and delivers more than
+forwarded texts.
+
+**It does not filter text spam, and cannot.** Every Google Voice forward is
+from `voice-noreply@google.com` whether a person or a marketer sent the text,
+so the sender address says nothing. What separates them is the subject Voice
+writes — "New text message from *sender*" — where marketing is a bare five- or
+six-digit short code and a person is a full number or a name. The relay script
+filters on that, before anything is posted.
 
 ### b. The site reads a mailbox (needs IMAP, so needs a paid mail plan)
 

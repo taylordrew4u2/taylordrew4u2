@@ -41,6 +41,35 @@ const LABEL = 'decisions-sent';
 /** A cap per run, so a backlog cannot turn into one enormous request burst. */
 const MAX_PER_RUN = 25;
 
+/**
+ * Skip texts from short codes — the five- and six-digit senders that
+ * marketing uses. A number collects those whether you asked for them or not,
+ * and one arriving during the show would otherwise be read out on stage.
+ *
+ * This has to happen here rather than at the site, because every one of these
+ * emails is from voice-noreply@google.com whether a person or VistaPrint sent
+ * the text. The only thing that tells them apart is the subject, which Voice
+ * writes as "New text message from <sender>" — a short code is bare digits,
+ * while a person is a full number or a name from your contacts. Both of those
+ * still get through.
+ *
+ * Set to false to take everything.
+ */
+const SKIP_SHORT_CODES = true;
+
+/**
+ * Whether Voice's subject line names a short code rather than a person.
+ *
+ * Deliberately narrow: three to six digits and nothing else. A real number is
+ * longer than that once Voice has written it out, and a contact name is not
+ * digits at all.
+ */
+function isShortCode(subject) {
+  const match = /\bfrom\s+(.+?)\s*$/i.exec(subject || '');
+  if (!match) return false;
+  return /^\d{3,6}$/.test(match[1].trim());
+}
+
 function settings() {
   const props = PropertiesService.getScriptProperties();
   const endpoint = props.getProperty('ENDPOINT');
@@ -92,6 +121,10 @@ function forwardDecisions() {
     var allDone = true;
 
     for (var j = 0; j < messages.length; j++) {
+      if (SKIP_SHORT_CODES && isShortCode(messages[j].getSubject())) {
+        console.log('Skipping a short code: ' + messages[j].getSubject());
+        continue;
+      }
       if (!post(config, messages[j])) allDone = false;
     }
 
@@ -124,7 +157,17 @@ function checkSetup() {
   });
 
   const code = response.getResponseCode();
+  const waiting = GmailApp.search(QUERY.replace('{LABEL}', LABEL), 0, 25);
+  var shortCodes = 0;
+  for (var i = 0; i < waiting.length; i++) {
+    const messages = waiting[i].getMessages();
+    for (var j = 0; j < messages.length; j++) {
+      if (isShortCode(messages[j].getSubject())) shortCodes++;
+    }
+  }
+
   console.log('Unsent forwards waiting: ' + found);
+  console.log('Of those sampled, from short codes (marketing, skipped): ' + shortCodes);
   console.log('Site answered: ' + code + ' ' + response.getContentText().slice(0, 200));
 
   if (code === 401) console.error('SECRET does not match DECISIONS_INBOUND_SECRET in Vercel.');
