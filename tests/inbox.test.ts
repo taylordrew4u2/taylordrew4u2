@@ -7,6 +7,54 @@ import {
   messageFromForward,
 } from "../src/lib/inbox.ts";
 
+/**
+ * The exact shape of a real Google Voice forward, checked against live mail:
+ * a bare link on the first line, the message hard-wrapped at ~75 characters,
+ * then a footer whose wording is "to this message" and "This email was sent".
+ * Only the words are replaced — every structural detail is as Voice sends it.
+ */
+const REAL_FORWARD = [
+  "<https://voice.google.com>",
+  "I told my landlord I would take the apartment and I have not seen",
+  "it yet.",
+  "Also I have no job.",
+  "To respond to this message, launch Google Voice (https://voice.google.com)",
+  "on your mobile device or computer.",
+  "YOUR ACCOUNT <https://voice.google.com> HELP CENTER",
+  "<https://support.google.com/voice#topic=1707989> HELP FORUM",
+  "<https://productforums.google.com/forum/#!forum/voice>",
+  "This email was sent to you because you indicated that you'd like to receive",
+  "email notifications for text messages. If you don't want to receive such",
+  "emails in the future, please update your email notification settings",
+  "<https://voice.google.com/settings#messaging>.",
+  "Google LLC",
+  "1600 Amphitheatre Pkwy",
+  "Mountain View CA 94043 USA",
+].join("\n");
+
+test("a real Google Voice forward yields only what the person typed", () => {
+  assert.equal(
+    messageFromForward(REAL_FORWARD),
+    "I told my landlord I would take the apartment and I have not seen it yet. Also I have no job."
+  );
+});
+
+test("none of Google's footer survives", () => {
+  const out = messageFromForward(REAL_FORWARD);
+  for (const leak of [
+    "voice.google.com",
+    "YOUR ACCOUNT",
+    "HELP CENTER",
+    "HELP FORUM",
+    "Google LLC",
+    "Amphitheatre",
+    "notification settings",
+    "To respond",
+  ]) {
+    assert.ok(!out.includes(leak), `footer leaked: ${leak}`);
+  }
+});
+
 test("the decision is taken from above Google Voice's own words", () => {
   const email = [
     "Quit my job",
@@ -18,7 +66,17 @@ test("the decision is taken from above Google Voice's own words", () => {
   assert.equal(messageFromForward(email), "Quit my job");
 });
 
-test("a decision that runs to several lines keeps all of them", () => {
+test("the real forward's sender is recognised", () => {
+  // voice-noreply@google.com contains neither "voice.google.com" nor
+  // "txt.voice.google.com", which is what the first version looked for.
+  assert.equal(
+    looksLikeForwardedText("voice-noreply@google.com", "New text message from 84861"),
+    true
+  );
+  assert.equal(looksLikeForwardedText("voice-noreply@google.com", ""), true);
+});
+
+test("a blank line still separates paragraphs, but wrapped lines rejoin", () => {
   const email = [
     "I told my landlord I'd take the apartment.",
     "",
@@ -54,7 +112,8 @@ test("a quoted earlier message is not mistaken for this one", () => {
 
 test("an HTML-only forward is read as text", () => {
   const email = "<div>Quit my <b>job</b><br>and moved</div><p>--</p><p>voice.google.com</p>";
-  assert.equal(messageFromForward(email), "Quit my job\nand moved");
+  // Wrapped lines rejoin, so this is one sentence rather than two lines.
+  assert.equal(messageFromForward(email), "Quit my job and moved");
 });
 
 test("htmlToText drops markup and decodes the usual entities", () => {
