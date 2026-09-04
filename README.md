@@ -23,9 +23,55 @@ This repo is both my profile and a working product:
 live stand-up show in Ridgewood, Queens, and the admin its producers use to run
 it. Next.js 16, React 19, TypeScript, Tailwind 4 — **and no database.**
 
+<p align="center">
+  <img src="docs/images/home.png" alt="The Pins &amp; Needles Comedy home page: the line-art logo, the section nav, and a pink banner announcing the weekly show with a call to send a decision in." width="860">
+</p>
+
 It is worth a look because the constraints are real rather than illustrative:
 the people editing it are comedians on a phone, the audience hits it forty at a
 time during one bar hour, and it has to cost nothing to run.
+
+### The show page, and the panel that runs the show
+
+<table>
+<tr>
+<td width="50%" valign="top">
+<img src="docs/images/bad-decisions.png" alt="The Bad Decisions page: show time, venue, and a notice reading Submissions open an hour before the show." width="100%">
+<br><em>The audience page. The form only exists in the hour around the show — the rest of the week it says when it opens.</em>
+</td>
+<td width="50%" valign="top">
+<img src="docs/images/admin.png" alt="The admin Bad Decisions tab: a Tonight panel with a live count, Draw one, Refresh and Archive everything buttons, above the page's own settings." width="100%">
+<br><em>What the host has open on stage. Draw one picks at random on the server, so two phones can never pull the same submission.</em>
+</td>
+</tr>
+</table>
+
+### How a decision gets from the room to the stage
+
+```mermaid
+flowchart LR
+  QR["QR code on the table"] --> Form["/bad-decisions form"]
+  SMS["Text message"] --> Voice["Google Voice"]
+  Voice -->|forwards by email| Relay["Apps Script relay"]
+
+  Form --> Public["POST /api/decisions"]
+  Relay -->|POST with shared secret| Inbound["POST /api/decisions/inbound"]
+
+  Public --> Gate{"Inside the submission window?"}
+  Inbound --> Gate
+  Gate -->|no| Closed["Refused, and told when it opens"]
+  Gate -->|yes| Store[("One file per submission")]
+
+  Store --> Panel["Admin, Tonight panel"]
+  Panel --> Draw["Draw one at random"]
+```
+Every way in enforces the same window and the same sanitising, because the
+endpoint is what a QR code points at — the form is not a gate, it is a
+convenience. Texting in needs no mailbox password anywhere: the site holds one
+secret scoped to one endpoint, and a
+[small relay script](docs/relay/gmail-apps-script.gs) posts to it.
+
+### What is actually interesting here
 
 - **Content is one JSON document merged over compiled-in defaults**, so a new
   field ships without a migration and a fresh deploy is already a finished site.
@@ -34,16 +80,18 @@ time during one bar hour, and it has to cost nothing to run.
 - **Audience submissions are one file each.** Forty people scanning the same QR
   code in the same minute would lose writes against a shared array, so there is
   nothing to contend over.
-- **The live count is a directory listing, not a read of every file.** The first
-  version would have exhausted GitHub's hourly API limit inside the first minute
-  of a show. Ids carry a sortable timestamp, so counting is one call at any pile
-  size.
+- **Reads are driven by what a listing already tells you.** The admin polls
+  every fifteen seconds for the length of a show; re-reading every file was
+  measured at **14,640 GitHub API requests an hour against a 5,000 limit**, so
+  the panel would have started failing mid-show. Each listing entry carries a
+  content hash, so only files that actually changed are read — **240 an hour**,
+  at any pile size.
 - **Show times are New York wall-clock**, resolved against the zone's real
   offset for the date, so the DST changeover needs no maintenance.
 - **The admin fails closed.** Credential policy lives in a module with no
   framework imports — so it is tested directly — and without both secrets set in
   production, every login is refused and every cookie stops verifying.
-- **129 tests on the Node test runner.** No test framework and no transpile
+- **194 tests on the Node test runner.** No test framework and no transpile
   step, because the logic worth testing lives in plain modules. CI runs lint,
   typecheck, tests and a production build on every pull request.
 
