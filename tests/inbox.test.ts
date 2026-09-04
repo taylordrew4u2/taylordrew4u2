@@ -5,6 +5,7 @@ import {
   htmlToText,
   looksLikeForwardedText,
   messageFromForward,
+  textFromMime,
 } from "../src/lib/inbox.ts";
 
 /**
@@ -149,4 +150,119 @@ test("forwardKey prefers the Message-ID and falls back to the uid", () => {
   assert.equal(forwardKey("<abc@mail.google.com>", 12), "abc@mail.google.com");
   assert.equal(forwardKey("", 12), "uid-12");
   assert.equal(forwardKey("   ", "99"), "uid-99");
+});
+
+/**
+ * The MIME envelope Voice actually sends, checked against a live message:
+ * multipart/alternative, a flowed plain-text part, and a quoted-printable HTML
+ * part. Only the words are replaced — the structure, the boundary shape, the
+ * encodings and the blank line above the message are as Voice sends them.
+ */
+const BOUNDARY = "000000000000be908c06584db14c";
+const REAL_MIME = [
+  "MIME-Version: 1.0",
+  "Subject: New text message from 84861",
+  "From: Google Voice <voice-noreply@google.com>",
+  "To: taylor@example.com",
+  `Content-Type: multipart/alternative; boundary="${BOUNDARY}"`,
+  "",
+  `--${BOUNDARY}`,
+  'Content-Type: text/plain; charset="UTF-8"; format=flowed; delsp=yes',
+  "",
+  "",
+  "<https://voice.google.com>",
+  "I told my landlord I would take the apartment and I have not seen",
+  "it yet.",
+  "",
+  "Also I have no job.",
+  "To respond to this message, launch Google Voice (https://voice.google.com)",
+  "on your mobile device or computer.",
+  "YOUR ACCOUNT <https://voice.google.com> HELP CENTER",
+  "Google LLC",
+  "1600 Amphitheatre Pkwy",
+  "Mountain View CA 94043 USA",
+  "",
+  `--${BOUNDARY}`,
+  'Content-Type: text/html; charset="UTF-8"',
+  "Content-Transfer-Encoding: quoted-printable",
+  "",
+  "<html><body><td>I told my landlord I would take the apartment =",
+  "and I have not seen it yet.</td></body></html>",
+  `--${BOUNDARY}--`,
+  "",
+].join("\r\n");
+
+test("a raw multipart forward yields the sentence, not the MIME envelope", () => {
+  // Reading the raw source directly used to put the boundary marker and a
+  // Content-Type header at the front of every decision.
+  const out = messageFromForward(textFromMime(REAL_MIME));
+  assert.equal(
+    out,
+    "I told my landlord I would take the apartment and I have not seen it yet.\n\nAlso I have no job."
+  );
+  assert.ok(!out.includes(BOUNDARY), "the MIME boundary leaked into the decision");
+  assert.ok(!out.toLowerCase().includes("content-type"), "a MIME header leaked into the decision");
+});
+
+test("the plain part is preferred over the HTML one", () => {
+  // Both parts carry the message; the plain one keeps the paragraph break.
+  assert.ok(textFromMime(REAL_MIME).includes("Also I have no job."));
+  assert.ok(!textFromMime(REAL_MIME).includes("<html>"));
+});
+
+test("quoted-printable is decoded, soft line breaks and all", () => {
+  const mime = [
+    'Content-Type: text/html; charset="UTF-8"',
+    "Content-Transfer-Encoding: quoted-printable",
+    "",
+    "<p>Caf=C3=A9 pl=",
+    "ans</p>",
+  ].join("\r\n");
+  assert.equal(textFromMime(mime).trim(), "<p>Café plans</p>");
+});
+
+test("a base64 part is decoded", () => {
+  const mime = [
+    'Content-Type: text/plain; charset="UTF-8"',
+    "Content-Transfer-Encoding: base64",
+    "",
+    Buffer.from("Quit my job", "utf8").toString("base64"),
+  ].join("\r\n");
+  assert.equal(textFromMime(mime).trim(), "Quit my job");
+});
+
+test("an HTML-only forward still reaches the parser", () => {
+  const mime = [
+    `Content-Type: multipart/alternative; boundary="${BOUNDARY}"`,
+    "",
+    `--${BOUNDARY}`,
+    'Content-Type: text/html; charset="UTF-8"',
+    "Content-Transfer-Encoding: quoted-printable",
+    "",
+    "<div>Got the dog</div><p>--</p><p>voice.google.com</p>",
+    `--${BOUNDARY}--`,
+    "",
+  ].join("\r\n");
+  assert.equal(messageFromForward(textFromMime(mime)), "Got the dog");
+});
+
+test("a body that is already decoded passes through untouched", () => {
+  // The parser must still work on input that never had a MIME envelope.
+  assert.equal(textFromMime("Quit my job\n\nand moved"), "Quit my job\n\nand moved");
+  assert.equal(textFromMime(""), "");
+});
+
+test("a multipart part with no readable content yields nothing", () => {
+  const mime = [
+    `Content-Type: multipart/alternative; boundary="${BOUNDARY}"`,
+    "",
+    `--${BOUNDARY}`,
+    'Content-Type: image/png; name="x.png"',
+    "Content-Transfer-Encoding: base64",
+    "",
+    "",
+    `--${BOUNDARY}--`,
+    "",
+  ].join("\r\n");
+  assert.equal(messageFromForward(textFromMime(mime)), "");
 });

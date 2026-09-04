@@ -89,10 +89,19 @@ the site reads that mailbox instead.
    **app password** at
    [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords).
    A normal account password will not work for IMAP.
-4. Set `INBOX_IMAP_USER` and `INBOX_IMAP_PASSWORD` in Vercel. The host, port
-   and mailbox default to Gmail's.
+4. Set `INBOX_IMAP_USER` (the Gmail address) and `INBOX_IMAP_PASSWORD` (the
+   app password from step 3, not the account password) in Vercel. The host,
+   port and mailbox default to Gmail's, so those three need no variable.
+   Redeploy afterwards — a running deployment does not pick up new variables.
 5. Put the number in **Admin → Bad Decisions → Text-in number** so it appears
    on the page.
+
+**What arrives.** Voice sends `multipart/alternative` mail — a plain-text part
+and an HTML one, each separately encoded. The site picks the plain part and
+decodes it before reading a word of it, so the boundary markers and MIME headers
+never reach the stage. Long texts are hard-wrapped by Voice at about 75
+characters; those breaks are rejoined, and only a blank line starts a new
+paragraph.
 
 **When it runs.** The admin's *Tonight* panel checks the mailbox each time it
 polls, which is every fifteen seconds while it is open — the hour of the show,
