@@ -95,11 +95,20 @@ including Zoho's free plan, which opens neither IMAP nor POP.
 secret. Set `DECISIONS_INBOUND_SECRET` in Vercel to a long random string
 (`openssl rand -hex 32`); until it is set the endpoint refuses everything.
 
-Point any of these at it:
+**The free way to feed it** is [`relay/gmail-apps-script.gs`](./relay/gmail-apps-script.gs).
+Google Voice will not call a webhook — the one thing it does is email every text
+to its own Google account — so something has to carry that last hop. That script
+runs on the account the number already forwards to, reads the forwards, and
+posts them here. It costs nothing, has no monthly task cap, and **the site never
+gets a password to that or any other mailbox**: it holds one secret, scoped to
+one endpoint, and the script is the only other thing that knows it.
 
-- a mail relay that can call a webhook on a new message
-- an automation (Zoho Flow, Zapier, Make, an Apps Script)
-- a shortcut on a phone, or anything that can make an HTTP request
+Setting it up is four steps and takes a few minutes; they are written at the top
+of the script. Run its `checkSetup` first — it posts nothing and tells you
+whether the secret matches.
+
+Anything else that can make an HTTP request works too: a mail relay with
+webhooks, an automation (Zapier, Make, Zoho Flow), a shortcut on a phone.
 
 The secret goes in a header or the URL, whichever the relay can manage:
 
@@ -135,8 +144,10 @@ out on stage.
    on the page.
 
 Note that a free mail plan usually does not include IMAP. Zoho's free plan
-opens neither IMAP nor POP, so a mailbox on it can only be reached through
-(a) above.
+opens neither IMAP nor POP —
+[their docs](https://www.zoho.com/mail/help/imap-access.html) say so outright —
+so a mailbox on it can only be reached through (a) above. Zoho Mail Lite, about
+a dollar a month, turns IMAP on if you would rather run no relay at all.
 
 **What arrives.** Voice sends `multipart/alternative` mail — a plain-text part
 and an HTML one, each separately encoded. The site picks the plain part and

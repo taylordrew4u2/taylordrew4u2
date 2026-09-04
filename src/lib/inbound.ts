@@ -79,8 +79,10 @@ export function readInbound(payload: unknown): Inbound {
  * single key with no value, which is the shape to recognise — the alternative
  * is dropping the message because of a header the sender never chose.
  *
- * Deliberately narrow: one key, and no value. A form with real fields in it
- * meant those fields, and guessing at it would put junk on stage.
+ * Deliberately narrow: one key, no value, and not a field name this already
+ * knows. A form with real fields in it meant those fields, and an empty one
+ * means the field was empty — `{"text": ""}` is a sender with nothing to say,
+ * not a sender whose decision is the word "text".
  */
 export function looseText(payload: unknown): string {
   if (typeof payload === "string") return payload;
@@ -88,9 +90,16 @@ export function looseText(payload: unknown): string {
 
   const entries = Object.entries(payload as Record<string, unknown>);
   if (entries.length !== 1) return "";
+
   const [key, value] = entries[0];
-  return value === "" ? key : "";
+  if (value !== "" || KNOWN_KEYS.has(key.toLowerCase())) return "";
+  return key;
 }
+
+/** Every field name above, so an empty one is never mistaken for a message. */
+const KNOWN_KEYS = new Set(
+  [...BODY_KEYS, ...FROM_KEYS, ...SUBJECT_KEYS].map((key) => key.toLowerCase())
+);
 
 /**
  * Whether a delivered message is allowed through, given an optional allowlist.

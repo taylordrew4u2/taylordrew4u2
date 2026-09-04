@@ -97,3 +97,18 @@ test("a form with real fields in it is left alone", () => {
   assert.equal(looseText(null), "");
   assert.equal(looseText(["Quit my job"]), "");
 });
+
+test("an empty known field is an empty message, not the field's name", () => {
+  // Found while writing the relay's setup check: it posts {"text": ""} to see
+  // whether the site answers, and this used to make the word "text" a
+  // decision — one that would then be read out on stage.
+  assert.equal(looseText({ text: "" }), "");
+  assert.equal(looseText({ body: "" }), "");
+  assert.equal(looseText({ raw: "" }), "");
+  assert.equal(looseText({ from: "" }), "");
+  assert.equal(looseText({ subject: "" }), "");
+  assert.equal(looseText({ "body-plain": "" }), "");
+  assert.equal(looseText({ Subject: "" }), "");
+  // Something that is plainly a sentence still gets through.
+  assert.equal(looseText({ "Quit my job": "" }), "Quit my job");
+});
