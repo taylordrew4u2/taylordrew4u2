@@ -2,28 +2,17 @@ import { NextResponse } from "next/server";
 import { closedMessage, sanitizeSubmission, submissionWindow } from "@/lib/decisions";
 import { getContent } from "@/lib/store";
 import { addSubmission, countSince } from "@/lib/submissions";
+import { Throttle, clientAddress } from "@/lib/throttle";
 
 export const dynamic = "force-dynamic";
 
 /**
- * A small in-memory limiter: one address gets a handful of sends a minute.
- * Enough to stop a script from filling the pile, loose enough that a table
- * of six on the same bar wifi all get through. Resets on every cold start,
- * which is fine — it only needs to hold for the length of one bar hour.
+ * One address gets a handful of sends a minute. Enough to stop a script from
+ * filling the pile, loose enough that a table of six on the same bar wifi all
+ * get through. Resets on every cold start, which is fine — it only needs to
+ * hold for the length of one bar hour.
  */
-const WINDOW_MS = 60_000;
-const PER_WINDOW = 8;
-const hits = new Map<string, number[]>();
-
-function limited(key: string): boolean {
-  const now = Date.now();
-  const recent = (hits.get(key) ?? []).filter((at) => now - at < WINDOW_MS);
-  if (recent.length >= PER_WINDOW) return true;
-  recent.push(now);
-  hits.set(key, recent);
-  if (hits.size > 5000) hits.clear(); // never let it grow without bound
-  return false;
-}
+const sends = new Throttle(8, 60_000);
 
 /**
  * The public count, cached for a few seconds.
@@ -47,14 +36,6 @@ async function roomCount(since: string): Promise<number | null> {
   }
   counted = { key: since, at: now, value };
   return value;
-}
-
-function addressOf(request: Request): string {
-  return (
-    request.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
-    request.headers.get("x-real-ip") ||
-    "unknown"
-  );
 }
 
 /**
@@ -108,12 +89,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  if (limited(addressOf(request))) {
+  const address = clientAddress(request);
+  const wait = sends.retryAfter(address);
+  if (wait) {
     return NextResponse.json(
       { ok: false, error: "That's plenty for now. Try again in a minute." },
-      { status: 429 }
+      { status: 429, headers: { "Retry-After": String(wait) } }
     );
   }
+  sends.record(address);
 
   const clean = sanitizeSubmission(body);
   if (!clean) {

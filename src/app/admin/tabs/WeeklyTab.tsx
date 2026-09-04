@@ -203,6 +203,9 @@ function StagePanel({ enabled }: { enabled: boolean }) {
   const [busy, setBusy] = useState(false);
   // Whether the forwarded-text mailbox is set up, and whether it is answering.
   const [texting, setTexting] = useState<{ on: boolean; error: string }>({ on: false, error: "" });
+  // The store holds more than one listing can return, so the pile below is
+  // only part of it. Silently showing part of it is the thing to avoid.
+  const [truncated, setTruncated] = useState(false);
   const [drawn, setDrawn] = useState<Submission[]>([]);
   const [showPile, setShowPile] = useState(false);
 
@@ -232,6 +235,7 @@ function StagePanel({ enabled }: { enabled: boolean }) {
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.ok) throw new Error(data.error || "Could not load submissions");
       setList(data.submissions as Submission[]);
+      setTruncated(Boolean(data.truncated));
       setError("");
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : "Could not load submissions");
@@ -275,7 +279,13 @@ function StagePanel({ enabled }: { enabled: boolean }) {
 
   const archive = async () => {
     if (!window.confirm("Archive every submission from tonight? The page count goes back to zero.")) return;
-    await act({ action: "archive-all" });
+    // The server archives a batch at a time so a big pile cannot outlast one
+    // request; keep asking until it says nothing is left. The passes are
+    // bounded so a server that stopped making progress cannot spin here.
+    for (let pass = 0; pass < 40; pass += 1) {
+      const data = await act({ action: "archive-all" });
+      if (!data || !Number(data.remaining)) break;
+    }
     setDrawn([]);
   };
 
@@ -294,6 +304,13 @@ function StagePanel({ enabled }: { enabled: boolean }) {
     >
       {error ? (
         <p className="rounded-md border border-red-900/60 bg-red-950/40 px-3 py-2 text-[12px] text-red-300">{error}</p>
+      ) : null}
+      {truncated ? (
+        <p className="rounded-md border border-amber-900/60 bg-amber-950/40 px-3 py-2 text-[12px] text-amber-300">
+          There are more stored submissions than can be listed at once, so this
+          is only the most recent of them. Delete some archived ones to bring
+          the rest back into view.
+        </p>
       ) : null}
       {texting.on ? (
         texting.error ? (
