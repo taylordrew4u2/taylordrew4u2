@@ -42,6 +42,117 @@ const BOILERPLATE = [
  */
 const LEADING_LINK = /^<?https?:\/\/(www\.)?voice\.google\.com>?\s*$/i;
 
+/**
+ * The readable text of an email, out of its raw MIME source.
+ *
+ * Voice sends `multipart/alternative`: a plain-text part and an HTML one, each
+ * behind its own headers and its own transfer encoding. Handing that whole
+ * blob to a line parser puts the boundary marker and a `Content-Type:` header
+ * at the front of whatever the person typed, so this picks one part and decodes
+ * it first. Plain text always wins; HTML is the fallback for senders that omit
+ * a plain part.
+ *
+ * Input that is not MIME at all is returned unchanged, so a body that has
+ * already been decoded still parses.
+ */
+export function textFromMime(raw: string): string {
+  return partText(raw || "", 0);
+}
+
+/** How deep a nested multipart may go before this stops looking. */
+const MAX_MIME_DEPTH = 8;
+
+function partText(section: string, depth: number): string {
+  const { headers, body } = splitHeaders(section);
+  const contentType = headerValue(headers, "content-type");
+  const boundary = /boundary="?([^";\s]+)"?/i.exec(contentType)?.[1];
+
+  if (/^multipart\//i.test(contentType) && boundary) {
+    if (depth >= MAX_MIME_DEPTH) return "";
+    let fallback = "";
+    for (const part of splitParts(body, boundary)) {
+      const type = headerValue(splitHeaders(part).headers, "content-type");
+      const text = partText(part, depth + 1);
+      if (!text.trim()) continue;
+      if (/^text\/plain/i.test(type)) return text;
+      if (!fallback) fallback = text;
+    }
+    return fallback;
+  }
+
+  return decodeBody(body, headerValue(headers, "content-transfer-encoding"));
+}
+
+/** Anything before the first blank line, but only when it really is a header. */
+const HEADER_LINE = /^[A-Za-z][A-Za-z0-9-]*:/;
+
+function splitHeaders(section: string): { headers: string; body: string } {
+  const normalized = section.replace(/\r\n?/g, "\n");
+  const at = normalized.indexOf("\n\n");
+  if (at === -1 || !HEADER_LINE.test(normalized)) return { headers: "", body: normalized };
+  return { headers: normalized.slice(0, at), body: normalized.slice(at + 2) };
+}
+
+function headerValue(headers: string, name: string): string {
+  // A long header may be folded across lines, continued by leading whitespace.
+  for (const line of headers.replace(/\n[ \t]+/g, " ").split("\n")) {
+    const at = line.indexOf(":");
+    if (at !== -1 && line.slice(0, at).trim().toLowerCase() === name) {
+      return line.slice(at + 1).trim();
+    }
+  }
+  return "";
+}
+
+function splitParts(body: string, boundary: string): string[] {
+  const marker = `--${boundary}`;
+  const parts: string[] = [];
+  let current: string[] | null = null;
+
+  for (const line of body.split("\n")) {
+    const trimmed = line.trimEnd();
+    if (trimmed === marker || trimmed === `${marker}--`) {
+      if (current) parts.push(current.join("\n"));
+      current = trimmed === marker ? [] : null;
+      continue;
+    }
+    if (current) current.push(line);
+  }
+  if (current) parts.push(current.join("\n"));
+
+  return parts;
+}
+
+function decodeBody(body: string, encoding: string): string {
+  const how = encoding.toLowerCase();
+  if (how === "base64") {
+    return Buffer.from(body.replace(/\s+/g, ""), "base64").toString("utf8");
+  }
+  if (how === "quoted-printable") return decodeQuotedPrintable(body);
+  return body;
+}
+
+/**
+ * Quoted-printable, which is how the HTML part arrives: `=` starts either a
+ * hex byte or a soft line break that is not really a break at all.
+ */
+function decodeQuotedPrintable(input: string): string {
+  const joined = input.replace(/=\n/g, "");
+  const bytes: number[] = [];
+
+  for (let i = 0; i < joined.length; i += 1) {
+    const pair = joined.slice(i + 1, i + 3);
+    if (joined[i] === "=" && /^[0-9a-f]{2}$/i.test(pair)) {
+      bytes.push(parseInt(pair, 16));
+      i += 2;
+      continue;
+    }
+    for (const byte of Buffer.from(joined[i], "utf8")) bytes.push(byte);
+  }
+
+  return Buffer.from(bytes).toString("utf8");
+}
+
 /** A very small HTML-to-text, for forwards that carry no plain part. */
 export function htmlToText(html: string): string {
   return (html || "")

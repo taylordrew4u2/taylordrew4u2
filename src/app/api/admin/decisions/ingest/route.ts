@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { isAuthed } from "@/lib/auth";
 import { sanitizeSubmission, submissionWindow } from "@/lib/decisions";
-import { looksLikeForwardedText, messageFromForward } from "@/lib/inbox";
+import { looksLikeForwardedText, messageFromForward, textFromMime } from "@/lib/inbox";
 import { getContent } from "@/lib/store";
 import { addSubmission } from "@/lib/submissions";
 
@@ -99,9 +99,9 @@ export async function POST() {
         }
 
         const raw = message.source?.toString("utf8") || "";
-        // The body is everything after the header block.
-        const body = raw.split(/\r?\n\r?\n/).slice(1).join("\n\n");
-        const clean = sanitizeSubmission({ decision: messageFromForward(body) });
+        // Voice sends multipart/alternative, so the readable part has to be
+        // picked and decoded before any of it is read as a sentence.
+        const clean = sanitizeSubmission({ decision: messageFromForward(textFromMime(raw)) });
 
         if (clean) {
           await addSubmission(clean.decision, "");
