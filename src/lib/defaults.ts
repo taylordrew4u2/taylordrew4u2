@@ -441,8 +441,10 @@ Standard microphone and sound system, basic stage lighting, minimal setup and br
     thisWeekHeading: "This week",
     noLineupText: "This week's lineup drops on Instagram. Same room, same time.",
     showOnHome: true,
-    homeStripText:
-      "Bad Decisions is our free weekly at Pixelated Records in Ridgewood — send in a decision, four comics do sets, then they talk it through.",
+    // One idea, not the whole format. The venue, the price and how the night
+    // runs are all on the page this points at; repeating them here just makes
+    // a sentence nobody finishes reading.
+    homeStripText: "A decision you can't make, made for you by four comedians.",
     homeStripCta: "Send yours in",
     showOnShowsPage: true,
     seo: seo({

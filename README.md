@@ -24,7 +24,7 @@ live stand-up show in Ridgewood, Queens, and the admin its producers use to run
 it. Next.js 16, React 19, TypeScript, Tailwind 4 — **and no database.**
 
 <p align="center">
-  <img src="docs/images/home.png" alt="The Pins &amp; Needles Comedy home page: the line-art logo, the section nav, and a pink banner announcing the weekly show with a call to send a decision in." width="860">
+  <img src="docs/images/home.png" alt="The Pins &amp; Needles Comedy home page: the line-art logo, the section nav, and a strip announcing the weekly show — an accent rule, the night in red, one line of copy, and a button reading Send yours in." width="860">
 </p>
 
 It is worth a look because the constraints are real rather than illustrative:

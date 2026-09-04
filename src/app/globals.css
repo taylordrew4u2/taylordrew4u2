@@ -18,33 +18,46 @@
   --font-body: var(--pnc-body);
 }
 
-* {
-  box-sizing: border-box;
-}
+/*
+ * Element defaults, inside @layer base.
+ *
+ * The layer is the whole point. `@import "tailwindcss"` puts every utility in
+ * a cascade layer, and unlayered CSS beats layered CSS no matter how specific
+ * the layered rule is. So `a { color: inherit }` sitting outside a layer was
+ * quietly beating `text-black` on every link in the app — nineteen of them —
+ * including a white button on a white background whose label was invisible.
+ * These are defaults; utilities are meant to override them, so they belong in
+ * the layer that says so.
+ */
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
 
-html,
-body {
-  margin: 0;
-  padding: 0;
-  background: var(--pnc-bg);
-  color: var(--pnc-fg);
-  font-family: var(--pnc-body);
-  -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
-}
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    background: var(--pnc-bg);
+    color: var(--pnc-fg);
+    font-family: var(--pnc-body);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
 
-h1,
-h2,
-h3,
-h4 {
-  font-family: var(--pnc-heading);
-  font-weight: 400;
-  margin: 0;
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--pnc-heading);
+    font-weight: 400;
+    margin: 0;
+  }
 }
 
 /* Horizontal strips: scrollable, but without a visible scrollbar eating the edge. */
