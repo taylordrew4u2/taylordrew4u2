@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { isAuthed } from "@/lib/auth";
 import { sanitizeSubmission, submissionWindow } from "@/lib/decisions";
 import { looksLikeForwardedText, messageFromForward, textFromMime } from "@/lib/inbox";
+import { eachUnseen, type MailboxClient } from "@/lib/mailbox";
 import { getContent } from "@/lib/store";
 import { addSubmission } from "@/lib/submissions";
 
@@ -84,18 +85,13 @@ export async function POST() {
     await client.connect();
     const lock = await client.getMailboxLock(settings.mailbox);
     try {
-      const unseen = await client.search({ seen: false });
-      const recent = (unseen || []).slice(-BATCH);
-
-      for (const uid of recent) {
-        const message = await client.fetchOne(String(uid), { envelope: true, source: true });
-        if (!message) continue;
-
+      // eachUnseen owns the UID addressing and marks every message read.
+      await eachUnseen(client as unknown as MailboxClient, BATCH, async (message) => {
         const from = message.envelope?.from?.[0]?.address || "";
         const subject = message.envelope?.subject || "";
         if (!looksLikeForwardedText(from, subject)) {
           skipped += 1;
-          continue;
+          return;
         }
 
         const raw = message.source?.toString("utf8") || "";
@@ -109,10 +105,7 @@ export async function POST() {
         } else {
           skipped += 1;
         }
-
-        // Marked read either way, so the same message is never counted twice.
-        await client.messageFlagsAdd(String(uid), ["\\Seen"], { uid: true });
-      }
+      });
     } finally {
       lock.release();
     }
