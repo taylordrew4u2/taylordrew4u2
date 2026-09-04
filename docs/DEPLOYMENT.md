@@ -12,6 +12,8 @@ Production and Preview.
 | `NEXT_PUBLIC_SITE_URL` | yes | Canonical origin. Drives canonical tags, sitemap, RSS, and the indexing gate. |
 | `ADMIN_PASSWORD` | yes | Password for `/admin`. |
 | `ADMIN_SECRET` | yes | Signs the admin cookie. `openssl rand -hex 32`. |
+| `DECISIONS_INBOUND_SECRET` | no | Lets a relay post a texted decision to `/api/decisions/inbound`. Unset, that endpoint refuses everything. |
+| `DECISIONS_INBOUND_FROM` | no | Comma-separated senders the endpoint accepts. Unset, it accepts anything with the secret. |
 
 **`/admin` refuses every login unless both admin variables are set.** There is
 no production fallback — see [ARCHITECTURE.md](./ARCHITECTURE.md#the-admin-fails-closed).
@@ -80,40 +82,83 @@ Some people will never scan a QR code. This gets their texts into the same
 pile the host draws from, without paying anyone.
 
 Google Voice is the only way to get a phone number for nothing. It cannot call
-a webhook — but it will forward every text it receives to an email address, so
-the site reads that mailbox instead.
+a webhook, but it will forward every text it receives to an email address — so
+the job is getting that mail to the site.
+
+There are two ways in. **The delivery endpoint is the one to prefer:** it holds
+no mailbox password, and it works on mail plans that do not open IMAP at all —
+including Zoho's free plan, which opens neither IMAP nor POP.
+
+### a. A relay posts to the site (free, no mailbox password)
+
+`POST /api/decisions/inbound` takes a decision from anything that knows the
+secret. Set `DECISIONS_INBOUND_SECRET` in Vercel to a long random string
+(`openssl rand -hex 32`); until it is set the endpoint refuses everything.
+
+Point any of these at it:
+
+- a mail relay that can call a webhook on a new message
+- an automation (Zoho Flow, Zapier, Make, an Apps Script)
+- a shortcut on a phone, or anything that can make an HTTP request
+
+The secret goes in a header or the URL, whichever the relay can manage:
+
+```
+x-inbound-secret: <secret>
+Authorization: Bearer <secret>
+POST /api/decisions/inbound?key=<secret>
+```
+
+The body can be JSON, a form post, or plain text. It reads `raw` (a whole MIME
+message) in preference to `text`, `body`, `body-plain`, `html` and the rest, so
+handing it the untouched forward gives the best result — that is the one the
+parser can take apart properly. A relay's own idea of "the body" is often the
+HTML part with the footer still attached.
+
+Optionally set `DECISIONS_INBOUND_FROM` to one or more addresses (comma
+separated). Only mail from those is accepted, everything else is ignored
+quietly. **Set this if the relay watches a whole inbox** — a phone number
+collects marketing texts, and spam during show hours would otherwise be read
+out on stage.
+
+### b. The site reads a mailbox (needs IMAP, so needs a paid mail plan)
 
 1. **Get a number** at [voice.google.com](https://voice.google.com).
 2. In Voice, **Settings → Messages → Forward messages to email**.
-3. On the receiving Gmail account, turn on 2-step verification and create an
-   **app password** at
-   [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords).
-   A normal account password will not work for IMAP.
-4. Set `INBOX_IMAP_USER` (the Gmail address) and `INBOX_IMAP_PASSWORD` (the
-   app password from step 3, not the account password) in Vercel. The host,
-   port and mailbox default to Gmail's, so those three need no variable.
-   Redeploy afterwards — a running deployment does not pick up new variables.
+3. On the receiving account, turn on 2-step verification and create an
+   **app password**. A normal account password will not work for IMAP.
+4. Set `INBOX_IMAP_USER` and `INBOX_IMAP_PASSWORD` in Vercel.
+   `INBOX_IMAP_HOST` defaults to Gmail's; set it for any other provider
+   (Zoho's is `imappro.zoho.com`, port 993). Redeploy afterwards — a running
+   deployment does not pick up new variables.
 5. Put the number in **Admin → Bad Decisions → Text-in number** so it appears
    on the page.
+
+Note that a free mail plan usually does not include IMAP. Zoho's free plan
+opens neither IMAP nor POP, so a mailbox on it can only be reached through
+(a) above.
 
 **What arrives.** Voice sends `multipart/alternative` mail — a plain-text part
 and an HTML one, each separately encoded. The site picks the plain part and
 decodes it before reading a word of it, so the boundary markers and MIME headers
 never reach the stage. Long texts are hard-wrapped by Voice at about 75
 characters; those breaks are rejoined, and only a blank line starts a new
-paragraph.
+paragraph. Both ways in share that parsing.
 
-**When it runs.** The admin's *Tonight* panel checks the mailbox each time it
-polls, which is every fifteen seconds while it is open — the hour of the show,
-and no other time. That is deliberate: a scheduler is the part that costs
-money, since Vercel's hobby plan allows a cron job once a day, which is no use
-to a live show. Keep the panel open and texts appear in the pile beside the
-form submissions.
+**When the mailbox reader runs.** The admin's *Tonight* panel checks the
+mailbox each time it polls, which is every fifteen seconds while it is open —
+the hour of the show, and no other time. That is deliberate: a scheduler is the
+part that costs money, since Vercel's hobby plan allows a cron job once a day,
+which is no use to a live show. The delivery endpoint has no such constraint,
+since the relay pushes rather than being polled.
 
 The panel says whether the mailbox is answering. Mail that does not look like a
 forwarded text is left alone, every message is marked read so nothing is added
 twice, and texts outside the open window are skipped like any other late
-submission. **The sender's number is never stored.**
+submission.
+
+**Both ways in enforce the submission window, and neither stores the sender's
+number or address.**
 
 ### The paid alternative
 
