@@ -7,6 +7,7 @@ import {
   mediaUrl,
   readFile,
   safePath,
+  urlPath,
   writeFile,
 } from "../src/lib/github-store.ts";
 
@@ -209,4 +210,24 @@ test("checkAccess stays quiet when everything is in order", async () => {
     { status: 200, body: { name: "main" } },
   ]);
   assert.equal(await checkAccess(config, fetchImpl), null);
+});
+
+test("urlPath keeps a filename from rewriting the request it appears in", () => {
+  // safePath keeps a caller inside the directory we own, but says nothing
+  // about characters that mean something in a URL. Unencoded, the "?" below
+  // starts the query early and the ref the request asked for is replaced.
+  const built = (path: string) => `https://api.github.com/repos/o/r/contents/${urlPath(path)}?ref=main`;
+
+  assert.equal(new URL(built("uploads/a.png")).searchParams.get("ref"), "main");
+  assert.equal(new URL(built("uploads/x?ref=other")).searchParams.get("ref"), "main");
+  assert.equal(new URL(built("uploads/x#frag")).searchParams.get("ref"), "main");
+  assert.equal(new URL(built("uploads/x&y=1")).searchParams.get("ref"), "main");
+});
+
+test("urlPath encodes each segment but keeps the separators", () => {
+  assert.equal(urlPath("uploads/a b.png"), "uploads/a%20b.png");
+  assert.equal(urlPath("uploads/caf\u00e9.png"), "uploads/caf%C3%A9.png");
+  assert.equal(urlPath("uploads/x?y#z"), "uploads/x%3Fy%23z");
+  // Still refuses to climb out, and still keeps the path shape.
+  assert.equal(urlPath("uploads/../../etc/passwd"), "uploads/etc/passwd");
 });

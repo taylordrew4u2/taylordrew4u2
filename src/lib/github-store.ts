@@ -66,6 +66,19 @@ export function safePath(path: string): string {
   return clean;
 }
 
+/**
+ * The same path, safe to drop into a request URL.
+ *
+ * safePath keeps a caller inside the directory we own, but says nothing about
+ * characters that mean something in a URL: a "?" or "#" in a filename would
+ * otherwise start the query or the fragment early and change which ref the
+ * request asks for. Segments are encoded one at a time so the separators
+ * between them survive.
+ */
+export function urlPath(path: string): string {
+  return safePath(path).split("/").map(encodeURIComponent).join("/");
+}
+
 export type Fetcher = typeof fetch;
 
 /**
@@ -81,7 +94,7 @@ export async function readFile(
   path: string,
   fetchImpl: Fetcher = fetch
 ): Promise<{ bytes: Buffer | null; sha: string | null }> {
-  const url = `${config.api}/repos/${config.owner}/${config.repo}/contents/${safePath(path)}?ref=${encodeURIComponent(config.branch)}`;
+  const url = `${config.api}/repos/${config.owner}/${config.repo}/contents/${urlPath(path)}?ref=${encodeURIComponent(config.branch)}`;
   const response = await fetchImpl(url, {
     headers: headers(config, "application/vnd.github.object+json"),
     cache: "no-store",
@@ -127,7 +140,7 @@ export async function writeFile(
   fetchImpl: Fetcher = fetch
 ): Promise<string> {
   const clean = safePath(path);
-  const url = `${config.api}/repos/${config.owner}/${config.repo}/contents/${clean}`;
+  const url = `${config.api}/repos/${config.owner}/${config.repo}/contents/${urlPath(clean)}`;
 
   const put = async (sha: string | null) => {
     const response = await fetchImpl(url, {
@@ -167,7 +180,7 @@ export async function listDir(
   path: string,
   fetchImpl: Fetcher = fetch
 ): Promise<{ name: string; path: string; sha: string }[]> {
-  const url = `${config.api}/repos/${config.owner}/${config.repo}/contents/${safePath(path)}?ref=${encodeURIComponent(config.branch)}`;
+  const url = `${config.api}/repos/${config.owner}/${config.repo}/contents/${urlPath(path)}?ref=${encodeURIComponent(config.branch)}`;
   const response = await fetchImpl(url, {
     headers: headers(config, "application/vnd.github+json"),
     cache: "no-store",
@@ -191,7 +204,7 @@ export async function deleteFile(
   const clean = safePath(path);
   const current = await readFile(config, clean, fetchImpl);
   if (!current.sha) return;
-  const response = await fetchImpl(`${config.api}/repos/${config.owner}/${config.repo}/contents/${clean}`, {
+  const response = await fetchImpl(`${config.api}/repos/${config.owner}/${config.repo}/contents/${urlPath(clean)}`, {
     method: "DELETE",
     headers: { ...headers(config, "application/vnd.github+json"), "Content-Type": "application/json" },
     body: JSON.stringify({ message, sha: current.sha, branch: config.branch }),
