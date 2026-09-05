@@ -496,7 +496,6 @@ Standard microphone and sound system, basic stage lighting, minimal setup and br
     titleAlign: "left",
     titleColor: "#FFFFFF",
     titleTransform: "none",
-    overlayOpacity: 0.65,
     imageFit: "cover",
     cornerRadius: 0,
     showDate: false,
