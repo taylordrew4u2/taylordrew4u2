@@ -27,6 +27,7 @@ export default function WeeklyTab({ content, update }: { content: Content; updat
         title="Bad Decisions page"
         hint="Lives at /bad-decisions — that address is what the QR code and the flyer point at. Everything here is the standing detail; each week's bill is a show in the Shows tab marked as part of this weekly."
       >
+        <QrCode />
         <Toggle
           label="Page is live"
           hint="off = /bad-decisions is a 404 and the form stops taking submissions"
@@ -186,6 +187,41 @@ export default function WeeklyTab({ content, update }: { content: Content; updat
         onChange={set("seo")}
       />
     </>
+  );
+}
+
+/**
+ * The QR code for the flyer and the table tent.
+ *
+ * Generated from the site's own URL rather than checked in as a file, so it
+ * can never point at a stale address. A cache-busting query string means
+ * editing the site URL and coming back here shows the new code, not a
+ * browser-cached old one.
+ */
+function QrCode() {
+  const [key] = useState(() => Date.now());
+  return (
+    <div className="flex items-center gap-4 rounded-lg border border-neutral-800 bg-neutral-900/40 p-4">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={`/api/admin/decisions/qr?v=${key}`}
+        alt="QR code linking to /bad-decisions"
+        width={112}
+        height={112}
+        className="h-28 w-28 shrink-0 rounded bg-white p-2"
+      />
+      <div className="text-[12px] text-neutral-400">
+        <p>Points at /bad-decisions on the live site. Print it on the flyer or the table tent.</p>
+        <a
+          href={`/api/admin/decisions/qr?v=${key}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-1 inline-block underline underline-offset-4 hover:text-white"
+        >
+          Open full size to save
+        </a>
+      </div>
+    </div>
   );
 }
 
