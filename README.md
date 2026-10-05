@@ -1,4 +1,4 @@
-<h1 align="center">Taylor</h1>
+<h1 align="center">Taylor Drew</h1>
 
 <p align="center">
   iOS and full-stack developer. I build native SwiftUI apps and TypeScript web apps, and I ship them to real users.<br>
@@ -15,7 +15,7 @@
 ## Highlights
 
 - **Shipped on the App Store.** [The BitBinder](https://apps.apple.com/us/app/the-bitbinder/id6756085897) passed Apple review and ships to real users: SwiftData with CloudKit sync, on-device speech recognition, and Vision-based text import.
-- **Tested like production software.** 439 unit tests and 14 end-to-end tests in [Showrunner](https://github.com/taylordrew4u2/Showrunner-ICanRunAShow), plus client-side encryption and a documented list of known limitations.
+- **Tested like production software.** 1,000+ unit tests and 22 Playwright end-to-end specs (run on desktop and phone) in [Showrunner](https://github.com/taylordrew4u2/Showrunner-ICanRunAShow), plus client-side encryption and a documented list of known limitations.
 - **Live sites, not localhost screenshots:** [icanrunashow.com](https://www.icanrunashow.com) · [rolecall.space](https://rolecall.space) · [billspilt.com](https://billspilt.com) · [the-trip-handler](https://the-trip-handler.vercel.app)
 - **Payments in production.** Stripe per-person collection, invite links, and approval flows in [The Trip Handler](https://github.com/taylordrew4u2/the-trip-handler).
 
@@ -49,6 +49,28 @@ Every featured repo has a real README: architecture, technical decisions, setup,
 | Project | What it does | Stack |
 |---|---|---|
 | **[SobStage](https://github.com/taylordrew4u2/usbmic)** | Aggregates up to 8 USB microphones into synced multitrack recordings and a live low-latency monitor mix, with at most 0.042 ms drift over a four-hour take | C++17, CMake, real-time audio |
+
+---
+
+## See them run
+
+<table>
+  <tr>
+    <td align="center" width="50%"><a href="https://github.com/taylordrew4u2/Showrunner-ICanRunAShow"><img src="assets/showrunner.gif" width="300" alt="Showrunner running a live show"></a><br><b>Showrunner</b>: run a show with live cue timers</td>
+    <td align="center" width="50%"><a href="https://github.com/taylordrew4u2/Bill-Spilt"><img src="assets/billspilt.gif" width="220" alt="BillSpilt adding an expense and settling up"></a><br><b>BillSpilt</b>: add an expense, then settle up</td>
+  </tr>
+  <tr>
+    <td align="center"><a href="https://github.com/taylordrew4u2/The-Bit-Binder"><img src="assets/bitbinder.gif" width="220" alt="The BitBinder app screens"></a><br><b>The BitBinder</b>: App Store screens</td>
+    <td align="center"><a href="https://github.com/taylordrew4u2/MyGigCalendar"><img src="assets/gigcalendar.gif" width="220" alt="My Gig Calendar public calendar"></a><br><b>My Gig Calendar</b>: the public fan calendar</td>
+  </tr>
+  <tr>
+    <td align="center"><a href="https://github.com/taylordrew4u2/nycstandupopenmicmaster"><img src="assets/openmic.gif" width="400" alt="NYC Open Mic directory with map and filters"></a><br><b>NYC Open Mic Master List</b>: map, filters, mic details</td>
+    <td align="center"><a href="https://github.com/taylordrew4u2/micro-short-website"><img src="assets/microshort.gif" width="400" alt="Short film promo site"></a><br><b>Micro-short film site</b></td>
+  </tr>
+  <tr>
+    <td align="center" colspan="2"><a href="https://github.com/taylordrew4u2/usbmic"><img src="assets/sobstage.gif" width="480" alt="SobStage multitrack USB mic recorder"></a><br><b>SobStage</b>: 8 USB mics, one synced multitrack</td>
+  </tr>
+</table>
 
 ---
 
