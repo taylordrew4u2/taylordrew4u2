@@ -15,7 +15,7 @@
 ## Highlights
 
 - **Shipped on the App Store.** [The BitBinder](https://apps.apple.com/us/app/the-bitbinder/id6756085897) passed Apple review and ships to real users: SwiftData with CloudKit sync, on-device speech recognition, and Vision-based text import.
-- **Tested like production software.** 1,000+ unit tests and 22 Playwright end-to-end specs (run on desktop and phone) in [Showrunner](https://github.com/taylordrew4u2/Showrunner-ICanRunAShow), plus client-side encryption and a documented list of known limitations.
+- **Tested like production software.** 1,045 unit tests and 120 Playwright end-to-end tests (23 specs, each run on desktop and phone) in [Showrunner](https://github.com/taylordrew4u2/Showrunner-ICanRunAShow), plus client-side encryption and a documented list of known limitations.
 - **Live sites, not localhost screenshots:** [icanrunashow.com](https://www.icanrunashow.com) · [rolecall.space](https://rolecall.space) · [billspilt.com](https://billspilt.com) · [the-trip-handler](https://the-trip-handler.vercel.app)
 - **Payments in production.** Stripe per-person collection, invite links, and approval flows in [The Trip Handler](https://github.com/taylordrew4u2/the-trip-handler).
 
@@ -56,7 +56,7 @@ Every featured repo has a real README: architecture, technical decisions, setup,
 
 <table>
   <tr>
-    <td align="center" width="50%"><a href="https://github.com/taylordrew4u2/Showrunner-ICanRunAShow"><img src="assets/showrunner.gif" width="300" alt="Showrunner running a live show"></a><br><b>Showrunner</b>: run a show with live cue timers</td>
+    <td align="center" width="50%"><a href="https://github.com/taylordrew4u2/Showrunner-ICanRunAShow"><img src="assets/showrunner.gif" width="400" alt="Showrunner running a live show"></a><br><b>Showrunner</b>: run a show with live cue timers</td>
     <td align="center" width="50%"><a href="https://github.com/taylordrew4u2/Bill-Spilt"><img src="assets/billspilt.gif" width="220" alt="BillSpilt adding an expense and settling up"></a><br><b>BillSpilt</b>: add an expense, then settle up</td>
   </tr>
   <tr>
